@@ -9,8 +9,7 @@ Il utilise également une classe AI pour effectuer des prédictions basées sur 
 ### Importation des modules nécessaires ############################################################
 ####################################################################################################
 
-from datetime import datetime
-
+import psutil
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -20,53 +19,77 @@ from pydantic import BaseModel
 ### Modèle de données ##############################################################################
 ####################################################################################################
 
-
-class Date(BaseModel):
+class ConsommationResponse(BaseModel):
     """
-    Modèle Pydantic représentant une date avec des attributs d'année, de mois et de jour.
+    Modèle pour structurer la réponse de l'API de consommation.
     """
-    annee: int
-    mois: int
-    jour: int
-    heure: int
-    minute: int
-    seconde: int
+    energie: float
+    unite: str
+    emissions_co2: float
+    unite_emissions: str
 
-    def __str__(self):
-        """
-        Retourne une chaîne de caractères représentant la date.
-        :return: Chaîne de caractères représentant la date au format "AAAA-MM-JJ HH:MM:SS".
-        """
-        return (
-            f"{self.annee}-{self.mois:02d}-{self.jour:02d}"
-            f" "
-            f"{self.heure:02d}:{self.minute:02d}:{self.seconde:02d}"
+
+class ConsommationDirecteResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API de consommation directe.
+    """
+    cpu_usage_percent: float
+    consommation_estimee: float
+    unite: str
+
+
+class ConsommationDirecteCalculerResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API de consommation directe calculée.
+    """
+    energie: float
+    unite: str
+    consommation_estimee: float
+    cpu_usage_percent: float
+    emissions_co2: float
+    unite_emissions: str
+
+
+####################################################################################################
+### Fonction générique #############################################################################
+####################################################################################################
+
+def calculer_consommation(energie: float, unite: str = "kWh") -> ConsommationResponse:
+    """
+    Fonction générique pour calculer les émissions de CO2 basées sur la consommation d'énergie.
+    :param energie: Quantité d'énergie consommée.
+    :param unite: Unité de l'énergie (par défaut "kWh").
+    :return: Instance de ConsommationResponse contenant les émissions de CO2.
+    """
+    try:
+        return ConsommationResponse(
+            energie=energie,
+            unite=unite,
+            emissions_co2=0,
+            unite_emissions=""
         )
+    except Exception as e:
+        raise ValueError(f"Erreur lors du calcul des émissions de CO2 : {str(e)}")
 
-    def __datetime__(self):
-        """
-        Retourne un objet datetime représentant la date.
-        :return: Objet datetime représentant la date.
-        """
-        return datetime.strptime(self.__str__(), "%Y-%m-%d %H:%M:%S")
 
-    def __day_of_week__(self):
-        """
-        Retourne le jour de la semaine.
-        :return: Jour de la semaine.
-        """
-        return self.__datetime__().strftime("%A")
+def consommation_locale() -> ConsommationDirecteResponse:
+    """
+    Calcule une estimation de la consommation énergétique locale basée sur l'utilisation des
+    ressources.
+    :return: Instance de ConsommationDirecteResponse contenant la consommation estimée.
+    """
+    # Consommation approximative par CPU en kWh (à ajuster selon votre matériel)
+    power_per_cpu = 0.05
 
-    def __is_valide__(self):
-        """
-        Vérifie si la date est valide.
-        :return: True si la date est valide, False sinon.
-        """
-        try:
-            self.__datetime__()
-            return True
-        except ValueError:
-            return False
+    cpu_usage = psutil.cpu_percent(interval=1)  # Utilisation moyenne du CPU sur 1 seconde
+    num_cpus = psutil.cpu_count(logical=True)  # Nombre de CPU logiques
+    consommation = (cpu_usage / 100) * power_per_cpu * num_cpus
+
+    return ConsommationDirecteResponse(
+        cpu_usage_percent=cpu_usage,
+        consommation_estimee=round(consommation, 4),  # Consommation estimée en kWh
+        unite="kWh"
+    )
 
 
 ####################################################################################################
@@ -110,6 +133,62 @@ class MyAPI(FastAPI):
             Point de terminaison GET qui retourne un message de bienvenue.
             """
             return {"message": "Bonjour, le monde!"}
+
+        @self.post("/consommation", response_model=ConsommationResponse)
+        def calculer_consommation_api(energie: float, unite: str = "kWh"):
+            """
+            API pour calculer les émissions de CO2 basées sur la consommation d'énergie.
+            :param energie: Quantité d'énergie consommée.
+            :param unite: Unité de l'énergie (par défaut "kWh").
+            :return: Instance de ConsommationResponse contenant les émissions de CO2.
+            """
+            try:
+                return calculer_consommation(energie, unite)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.get("/consommation/directe", response_model=ConsommationDirecteResponse)
+        def consommation_directe_api():
+            """
+            Retourne une estimation de la consommation d'énergie locale en direct.
+            :return: Instance de ConsommationDirecteResponse contenant la consommation estimée.
+            """
+            try:
+                return consommation_locale()
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Erreur lors du calcul de la consommation locale : {str(e)}"
+                )
+
+        @self.get(
+            "/consommation/directe-calculer",
+            response_model=ConsommationDirecteCalculerResponse
+        )
+        def consommation_directe_calculer_api():
+            """
+            Retourne une estimation de la consommation d'énergie locale en direct avec calcul des
+            émissions de CO2.
+            :return: Instance de ConsommationDirecteCalculerResponse contenant la consommation estimée
+                     et les émissions de CO2.
+            """
+            try:
+                consommation = consommation_locale()
+                result = calculer_consommation(consommation.consommation_estimee,
+                                               consommation.unite)
+                return ConsommationDirecteCalculerResponse(
+                    energie=consommation.consommation_estimee,
+                    unite=consommation.unite,
+                    consommation_estimee=consommation.consommation_estimee,
+                    cpu_usage_percent=consommation.cpu_usage_percent,
+                    emissions_co2=result.emissions_co2,
+                    unite_emissions=result.unite_emissions
+                )
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Erreur lors du calcul de la consommation locale : {str(e)}"
+                )
 
 
 ####################################################################################################
