@@ -9,12 +9,11 @@ Il utilise également une classe AI pour effectuer des prédictions basées sur 
 ### Importation des modules nécessaires ############################################################
 ####################################################################################################
 
-import psutil
+import numpy as np
+from codecarbon import EmissionsTracker
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from codecarbon import EmissionsTracker
-import numpy as np
 
 
 ####################################################################################################
@@ -30,6 +29,7 @@ class ConsommationResponse(BaseModel):
     emissions_co2: float
     unite_emissions: str
 
+
 class ListConsommationResponse(BaseModel):
     """
     Modèle pour structurer la réponse de l'API de consommation.
@@ -39,16 +39,16 @@ class ListConsommationResponse(BaseModel):
     emissions_co2: list[float]
     unite_emissions: str
 
+
 ####################################################################################################
 ### Fonction générique #############################################################################
 ####################################################################################################
 
 def calculer_consommation(nombre: int) -> ConsommationResponse:
     """
-    Fonction générique pour calculer les émissions de CO2 basées sur la consommation d'énergie.
-    :param energie: Quantité d'énergie consommée.
-    :param unite: Unité de l'énergie (par défaut "kWh").
-    :return: Instance de ConsommationResponse contenant les émissions de CO2.
+    Fonction générique pour calculer les émissions de CO2 basées sur la simulation d'une consommation d'énergie.
+    :param nombre: Nombre d'éléments simulés pour la consommation d'énergie.
+    :return: Instance de ConsommationResponse contenant l'énergie utilisée et les émissions de CO2 associées.
     """
     tracker = EmissionsTracker(measure_power_secs=1, save_to_file=False)
     try:
@@ -148,6 +148,7 @@ class MyAPI(FastAPI):
                 )
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=str(e))
+
 
 ####################################################################################################
 ### Point d'entrée de l'application ################################################################
