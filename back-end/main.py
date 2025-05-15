@@ -13,6 +13,8 @@ import psutil
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from codecarbon import EmissionsTracker
+import numpy as np
 
 
 ####################################################################################################
@@ -28,68 +30,44 @@ class ConsommationResponse(BaseModel):
     emissions_co2: float
     unite_emissions: str
 
-
-class ConsommationDirecteResponse(BaseModel):
+class ListConsommationResponse(BaseModel):
     """
-    Modèle pour structurer la réponse de l'API de consommation directe.
+    Modèle pour structurer la réponse de l'API de consommation.
     """
-    cpu_usage_percent: float
-    consommation_estimee: float
+    energie: list[float]
     unite: str
-
-
-class ConsommationDirecteCalculerResponse(BaseModel):
-    """
-    Modèle pour structurer la réponse de l'API de consommation directe calculée.
-    """
-    energie: float
-    unite: str
-    consommation_estimee: float
-    cpu_usage_percent: float
-    emissions_co2: float
+    emissions_co2: list[float]
     unite_emissions: str
-
 
 ####################################################################################################
 ### Fonction générique #############################################################################
 ####################################################################################################
 
-def calculer_consommation(energie: float, unite: str = "kWh") -> ConsommationResponse:
+def calculer_consommation(nombre: int) -> ConsommationResponse:
     """
     Fonction générique pour calculer les émissions de CO2 basées sur la consommation d'énergie.
     :param energie: Quantité d'énergie consommée.
     :param unite: Unité de l'énergie (par défaut "kWh").
     :return: Instance de ConsommationResponse contenant les émissions de CO2.
     """
+    tracker = EmissionsTracker(measure_power_secs=1, save_to_file=False)
     try:
+        tracker.start()
+        # Simule une consommation énergétique
+        np.random.random(nombre)
+        # Arrête le tracker et récupère les émissions de CO2
+        emissions_co2 = tracker.stop()  # Récupère les émissions en kg de CO2
+        energie_utilisee = tracker._total_energy.kWh
+
         return ConsommationResponse(
-            energie=energie,
-            unite=unite,
-            emissions_co2=0,
-            unite_emissions=""
+            energie=energie_utilisee,
+            unite="kWh",
+            emissions_co2=emissions_co2,  # round(emissions_co2, 4),  # Émissions de CO2 en kg
+            unite_emissions="kgCO2"
         )
     except Exception as e:
+        tracker.stop()
         raise ValueError(f"Erreur lors du calcul des émissions de CO2 : {str(e)}")
-
-
-def consommation_locale() -> ConsommationDirecteResponse:
-    """
-    Calcule une estimation de la consommation énergétique locale basée sur l'utilisation des
-    ressources.
-    :return: Instance de ConsommationDirecteResponse contenant la consommation estimée.
-    """
-    # Consommation approximative par CPU en kWh (à ajuster selon votre matériel)
-    power_per_cpu = 0.05
-
-    cpu_usage = psutil.cpu_percent(interval=1)  # Utilisation moyenne du CPU sur 1 seconde
-    num_cpus = psutil.cpu_count(logical=True)  # Nombre de CPU logiques
-    consommation = (cpu_usage / 100) * power_per_cpu * num_cpus
-
-    return ConsommationDirecteResponse(
-        cpu_usage_percent=cpu_usage,
-        consommation_estimee=round(consommation, 4),  # Consommation estimée en kWh
-        unite="kWh"
-    )
 
 
 ####################################################################################################
@@ -135,61 +113,41 @@ class MyAPI(FastAPI):
             return {"message": "Bonjour, le monde!"}
 
         @self.post("/consommation", response_model=ConsommationResponse)
-        def calculer_consommation_api(energie: float, unite: str = "kWh"):
+        def calculer_consommation_api(nombre: int):
             """
-            API pour calculer les émissions de CO2 basées sur la consommation d'énergie.
-            :param energie: Quantité d'énergie consommée.
-            :param unite: Unité de l'énergie (par défaut "kWh").
-            :return: Instance de ConsommationResponse contenant les émissions de CO2.
+            API pour calculer les émissions de CO2 basées sur une simulation de consommation d'énergie.
+            :param nombre: Nombre d'éléments simulés pour la consommation d'énergie.
+            :return: Instance de ConsommationResponse contenant l'énergie utilisée et les émissions de CO2 associées.
             """
             try:
-                return calculer_consommation(energie, unite)
+                return calculer_consommation(nombre)
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
-        @self.get("/consommation/directe", response_model=ConsommationDirecteResponse)
-        def consommation_directe_api():
+        @self.post("/consommation_list", response_model=ListConsommationResponse)
+        def calculer_consommation_list_api(nombre: int, repetition: int):
             """
-            Retourne une estimation de la consommation d'énergie locale en direct.
-            :return: Instance de ConsommationDirecteResponse contenant la consommation estimée.
-            """
-            try:
-                return consommation_locale()
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Erreur lors du calcul de la consommation locale : {str(e)}"
-                )
-
-        @self.get(
-            "/consommation/directe-calculer",
-            response_model=ConsommationDirecteCalculerResponse
-        )
-        def consommation_directe_calculer_api():
-            """
-            Retourne une estimation de la consommation d'énergie locale en direct avec calcul des
-            émissions de CO2.
-            :return: Instance de ConsommationDirecteCalculerResponse contenant la consommation estimée
-                     et les émissions de CO2.
+            API pour calculer les émissions de CO2 basées sur une simulation de consommation d'énergie répétée.
+            :param nombre: Nombre d'éléments simulés pour chaque consommation d'énergie.
+            :param repetition: Nombre de répétitions de la simulation.
+            :return: Instance de ListConsommationResponse contenant les énergies utilisées et les émissions de CO2 associées.
             """
             try:
-                consommation = consommation_locale()
-                result = calculer_consommation(consommation.consommation_estimee,
-                                               consommation.unite)
-                return ConsommationDirecteCalculerResponse(
-                    energie=consommation.consommation_estimee,
-                    unite=consommation.unite,
-                    consommation_estimee=consommation.consommation_estimee,
-                    cpu_usage_percent=consommation.cpu_usage_percent,
-                    emissions_co2=result.emissions_co2,
-                    unite_emissions=result.unite_emissions
-                )
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Erreur lors du calcul de la consommation locale : {str(e)}"
-                )
+                list_energie_utilisee = []
+                list_emissions_co2 = []
+                for i in range(repetition):
+                    res = calculer_consommation(nombre)
+                    list_energie_utilisee.append(res.energie)
+                    list_emissions_co2.append(res.emissions_co2)
 
+                return ListConsommationResponse(
+                    energie=list_energie_utilisee,
+                    unite="kWh",
+                    emissions_co2=list_emissions_co2,
+                    unite_emissions="kgCO2"
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
 
 ####################################################################################################
 ### Point d'entrée de l'application ################################################################
