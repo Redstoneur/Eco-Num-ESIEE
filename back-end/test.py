@@ -32,7 +32,7 @@ def simulate_cable_temp(
         ws: float,
         i: float,
         tc_initial: float,
-        simulation_time_min: int = 1,
+        simulation_time_min: int = 60,
         microsecond_step: float = 1e-6
 ) -> Tuple[float, float, float, float]:
     """
@@ -41,12 +41,12 @@ def simulate_cable_temp(
     :param ws: Vitesse du vent (m/s)
     :param i: Intensité (A)
     :param tc_initial: Température initiale du câble (°C)
-    :param simulation_time_min: Durée de la simulation (minutes)
+    :param simulation_time_min: Durée de la simulation (s)
     :param microsecond_step: Pas de temps pour la simulation (s)
     :return: Tuple contenant la température finale du câble, l'énergie utilisée (Wh), les émissions
              de CO2 (g) et le temps d'exécution (s).
     """
-    total_time_s: float = simulation_time_min * 60
+    total_time_s: float = simulation_time_min
     t: np.ndarray = np.arange(0, total_time_s, microsecond_step)
 
     start_time: float = time.time()
@@ -62,11 +62,14 @@ def simulate_cable_temp(
 
 # --- Simulation répétée 30 fois pour faire une courbe 30 minutes ---
 def run_x_min_simulation(
-        minutes: int = 30, microsecond_step: float = 1e-6
+        minutes: int = 30,
+        step: int = 1,
+        microsecond_step: float = 1e-6
 ) -> Tuple[List[float], List[float], List[float], List[float]]:
     """
     Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
     :param minutes: Nombre de minutes à simuler (par défaut 30).
+    :param step: Pas de temps pour la simulation (s)
     :param microsecond_step: Pas de temps pour la simulation (s)
     :return: Liste des températures, énergies et émissions de CO2 pour chaque minute.
     """
@@ -82,15 +85,17 @@ def run_x_min_simulation(
 
     tc_current: float = tc_initial
 
-    for minute in range(minutes):
-        minute: int  # annotation explicite
+    minutes_seconde = minutes * 60
+    for tmp in range(0, minutes_seconde, step):
+        minute = (tmp + step) / 60
+        print(f"Simulation de la minute {minute}...")
         tc: float
         e: float
         co2: float
         exec_time: float
         tc, e, co2, exec_time = simulate_cable_temp(
             ta, ws, i, tc_current,
-            simulation_time_min=1,
+            simulation_time_min=step,
             microsecond_step=microsecond_step
         )
         tc_list.append(tc)
@@ -100,11 +105,30 @@ def run_x_min_simulation(
         tc_current = tc  # Utiliser la temp finale comme nouvelle initiale
 
         print(
-            f"Minute {minute + 1}: Tc = {tc:.2f}°C, Énergie = {e:.4f} Wh, CO2 = {co2:.2f} g, "
+            f"Minute {minute}: Tc = {tc:.2f}°C, Énergie = {e:.4f} Wh, CO2 = {co2:.2f} g, "
             f"Temps = {exec_time:.2f} s"
         )
 
     return tc_list, energy_list, co2_list, exec_times
+
+
+def run_x_min_simulation_simple(
+        minutes: int = 30,
+        step: int = 1,
+        microsecond_step: float = 1e-6
+) -> Tuple[List[float], List[float], List[float], List[float]]:
+    """
+    Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
+    :param minutes: Nombre de minutes à simuler
+    :param step: Pas de temps pour la simulation (minutes)
+    :param microsecond_step: Pas de temps pour la simulation (s)
+    :return: Liste des températures, énergies et émissions de CO2 pour chaque minute.
+    """
+    return run_x_min_simulation(
+        minutes=minutes,
+        step=step * 60,  # Convertir les minutes en secondes
+        microsecond_step=microsecond_step
+    )
 
 
 # --- Plotting avec Plotly ---
@@ -139,6 +163,10 @@ def plot_results(
 # --- Exécution principale ---
 if __name__ == "__main__":
     minutes: int = 30
+    step: int = 1
     microsecond_step: float = 1e-6
-    tc_list, energy_list, co2_list, exec_times = run_x_min_simulation(minutes, microsecond_step)
+    tc_list, energy_list, co2_list, exec_times = run_x_min_simulation_simple(
+        minutes=minutes, step=step,
+        microsecond_step=microsecond_step
+    )
     plot_results(tc_list, energy_list, co2_list, minutes)
