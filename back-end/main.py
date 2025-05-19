@@ -23,8 +23,8 @@ from scipy.integrate import odeint
 ### Constantes #####################################################################################
 ####################################################################################################
 
-R_cable: float = 0.0001  # Ohms (résistance du câble)
-CO2_factor: int = 82  # g CO2 / kWh
+energie_utilisee_unit: str = "kWh"  # Unité de l'énergie utilisée
+emissions_co2_unit: str = "kgCO2"  # Unité des émissions de CO2
 
 
 ####################################################################################################
@@ -56,8 +56,18 @@ class SimulationCableTemperatureResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale: float
+    temps_execution: float
+
+
+class SimulationCableTemperatureConsommationResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API de simulation de température de câble.
+    """
+    temperature_finale: float
     energie_utilisee: float
+    energie_utilisee_unit: str
     emissions_co2: float
+    emissions_co2_unit: str
     temps_execution: float
 
 
@@ -66,40 +76,26 @@ class MultipleSimulationCableTemperatureResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale_list: List[float]
+    temps_execution: List[float]
+
+
+class MultipleSimulationCableTemperatureConsommationResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API de simulation de température de câble.
+    """
+    temperature_finale_list: List[float]
     energie_utilisee_list: List[float]
+    energie_utilisee_cumule: float
+    energie_utilisee_unit: str
     emissions_co2_list: List[float]
+    emissions_co2_cumule: float
+    emissions_co2_unit: str
     temps_execution: List[float]
 
 
 ####################################################################################################
 ### Fonction générique #############################################################################
 ####################################################################################################
-
-def calculer_consommation(nombre: int) -> ConsommationResponse:
-    """
-    Fonction générique pour calculer les émissions de CO2 basées sur la simulation d'une consommation d'énergie.
-    :param nombre: Nombre d'éléments simulés pour la consommation d'énergie.
-    :return: Instance de ConsommationResponse contenant l'énergie utilisée et les émissions de CO2 associées.
-    """
-    tracker = EmissionsTracker(measure_power_secs=1, save_to_file=False)
-    try:
-        tracker.start()
-        # Simule une consommation énergétique
-        np.random.random(nombre)
-        # Arrête le tracker et récupère les émissions de CO2
-        emissions_co2 = tracker.stop()  # Récupère les émissions en kg de CO2
-        energie_utilisee = tracker._total_energy.kWh
-
-        return ConsommationResponse(
-            energie=energie_utilisee,
-            unite="kWh",
-            emissions_co2=emissions_co2,  # round(emissions_co2, 4),  # Émissions de CO2 en kg
-            unite_emissions="kgCO2"
-        )
-    except Exception as e:
-        tracker.stop()
-        raise ValueError(f"Erreur lors du calcul des émissions de CO2 : {str(e)}")
-
 
 def d_tc_dt(
         temperature_cable_initiale: float,
@@ -151,19 +147,13 @@ def simuler_temperature_cable(
     end_time: float = time.time()
 
     final_tc: float = float(tc_sol[-1])
-    energy_wh: float = (R_cable * intensite_courant ** 2 * total_time_s) / 3600
-    co2_emitted: float = energy_wh * CO2_factor
 
     print(f"Final Temperature: {final_tc:.2f}°C")
-    print(f"Energy Used: {energy_wh:.4f} Wh")
-    print(f"CO2 Emissions: {co2_emitted:.2f} g")
     print(f"Execution Time: {end_time - start_time:.2f} s")
     print("Simulation completed.")
 
     return SimulationCableTemperatureResponse(
         temperature_finale=final_tc,
-        energie_utilisee=energy_wh,
-        emissions_co2=co2_emitted,
         temps_execution=end_time - start_time
     )
 
@@ -190,6 +180,107 @@ def simulation_temperature_cable_sur_x_minutes(
     """
 
     temperature_finale_list: List[float] = []
+    temps_execution: List[float] = []
+
+    temperature_cable_actuel: float = temperature_cable_initiale
+
+    minutes_seconde = duree_minutes * 60
+    for tmp in range(0, minutes_seconde, pas_seconde):
+        minute = (tmp + pas_seconde) / 60
+        print(f"Simulation de la minute {minute}...")
+
+        res: SimulationCableTemperatureResponse = simuler_temperature_cable(
+            temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
+            duree_simulation_secondes=pas_seconde,
+            pas_temps_microseconde=pas_microseconde
+        )
+
+        temperature_finale_list.append(res.temperature_finale)
+        temps_execution.append(res.temps_execution)
+        temperature_cable_actuel = res.temperature_finale
+
+        print(
+            f"Minute {minute}: Tc = {res.temperature_finale:.2f}°C,"
+            f"Temps = {res.temps_execution:.2f} s"
+        )
+
+    return MultipleSimulationCableTemperatureResponse(
+        temperature_finale_list=temperature_finale_list,
+        temps_execution=temps_execution
+    )
+
+
+def simuler_temperature_cable_avec_consommation(
+        temperature_ambiante: float,
+        vitesse_vent: float,
+        intensite_courant: float,
+        temperature_cable_initiale: float,
+        duree_simulation_secondes: int = 60,
+        pas_temps_microseconde: float = 1e-6
+) -> SimulationCableTemperatureConsommationResponse:
+    """
+    Simule la température du câble sur une période donnée et calcule la consommation d'énergie.
+    :param temperature_ambiante: Température ambiante (°C)
+    :param vitesse_vent: Vitesse du vent (m/s)
+    :param intensite_courant: Intensité (A)
+    :param temperature_cable_initiale: Température initiale du câble (°C)
+    :param duree_simulation_secondes: Durée de la simulation (s)
+    :param pas_temps_microseconde: Pas de temps pour la simulation (s)
+    :return: Instance de ConsommationResponse contenant l'énergie utilisée et les émissions de CO2
+             associées.
+    """
+    tracker = EmissionsTracker(measure_power_secs=1, save_to_file=False)
+    try:
+        tracker.start()
+
+        res: SimulationCableTemperatureResponse = simuler_temperature_cable(
+            temperature_ambiante=temperature_ambiante,
+            vitesse_vent=vitesse_vent,
+            intensite_courant=intensite_courant,
+            temperature_cable_initiale=temperature_cable_initiale,
+            duree_simulation_secondes=duree_simulation_secondes,
+            pas_temps_microseconde=pas_temps_microseconde
+        )
+
+        # Arrête le tracker et récupère les émissions de CO2
+        emissions_co2 = tracker.stop()  # Récupère les émissions en kg de CO2
+        energie_utilisee = tracker._total_energy.kWh
+
+        return SimulationCableTemperatureConsommationResponse(
+            temperature_finale=res.temperature_finale,
+            energie_utilisee=energie_utilisee,
+            energie_utilisee_unit=energie_utilisee_unit,
+            emissions_co2=emissions_co2,  # round(emissions_co2, 4),  # Émissions de CO2 en kg
+            emissions_co2_unit=emissions_co2_unit,
+            temps_execution=res.temps_execution
+        )
+    except Exception as e:
+        tracker.stop()
+        raise ValueError(f"Erreur lors du calcul des émissions de CO2 : {str(e)}")
+
+
+def simulation_temperature_cable_sur_x_minutes_avec_consommation(
+        duree_minutes: int = 30,
+        pas_seconde: int = 60,
+        pas_microseconde: float = 1e-6,
+        temperature_ambiante: float = 25,
+        vitesse_vent: float = 1,
+        intensite_courant: float = 300,
+        temperature_cable_initiale: float = 25
+) -> MultipleSimulationCableTemperatureConsommationResponse:
+    """
+    Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
+    :param duree_minutes: Nombre de minutes à simuler (par défaut 30).
+    :param pas_seconde: Pas de temps pour la simulation (s)
+    :param pas_microseconde: Pas de temps pour la simulation (s)
+    :param temperature_ambiante: Température ambiante (°C)
+    :param vitesse_vent: Vitesse du vent (m/s)
+    :param intensite_courant: Intensité (A)
+    :param temperature_cable_initiale: Température initiale du câble
+    :return: Liste des températures, énergies et émissions de CO2 pour chaque minute.
+    """
+
+    temperature_finale_list: List[float] = []
     energie_utilisee_list: List[float] = []
     emissions_co2_list: List[float] = []
     temps_execution: List[float] = []
@@ -201,7 +292,7 @@ def simulation_temperature_cable_sur_x_minutes(
         minute = (tmp + pas_seconde) / 60
         print(f"Simulation de la minute {minute}...")
 
-        res = simuler_temperature_cable(
+        res = simuler_temperature_cable_avec_consommation(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
             duree_simulation_secondes=pas_seconde,
             pas_temps_microseconde=pas_microseconde
@@ -211,7 +302,7 @@ def simulation_temperature_cable_sur_x_minutes(
         energie_utilisee_list.append(res.energie_utilisee)
         emissions_co2_list.append(res.emissions_co2)
         temps_execution.append(res.temps_execution)
-        temperature_cable_actuel = res.temperature_finale  # Utiliser la temp finale comme nouvelle initiale
+        temperature_cable_actuel = res.temperature_finale
 
         print(
             f"Minute {minute}: Tc = {res.temperature_finale:.2f}°C,"
@@ -219,10 +310,14 @@ def simulation_temperature_cable_sur_x_minutes(
             f"Temps = {res.temps_execution:.2f} s"
         )
 
-    return MultipleSimulationCableTemperatureResponse(
+    return MultipleSimulationCableTemperatureConsommationResponse(
         temperature_finale_list=temperature_finale_list,
         energie_utilisee_list=energie_utilisee_list,
+        energie_utilisee_unit=energie_utilisee_unit,
         emissions_co2_list=emissions_co2_list,
+        emissions_co2_unit=emissions_co2_unit,
+        emissions_co2_cumule=sum(emissions_co2_list),
+        energie_utilisee_cumule=sum(energie_utilisee_list),
         temps_execution=temps_execution
     )
 
@@ -269,49 +364,12 @@ class MyAPI(FastAPI):
             """
             return {"message": "Bonjour, le monde!"}
 
-        @self.post("/consommation", response_model=ConsommationResponse)
-        def calculer_consommation_api(nombre: int):
-            """
-            API pour calculer les émissions de CO2 basées sur une simulation de consommation d'énergie.
-            :param nombre: Nombre d'éléments simulés pour la consommation d'énergie.
-            :return: Instance de ConsommationResponse contenant l'énergie utilisée et les émissions de CO2 associées.
-            """
-            try:
-                return calculer_consommation(nombre)
-            except ValueError as e:
-                raise HTTPException(status_code=400, detail=str(e))
-
-        @self.post("/consommation_list", response_model=ListConsommationResponse)
-        def calculer_consommation_list_api(nombre: int, repetition: int):
-            """
-            API pour calculer les émissions de CO2 basées sur une simulation de consommation d'énergie répétée.
-            :param nombre: Nombre d'éléments simulés pour chaque consommation d'énergie.
-            :param repetition: Nombre de répétitions de la simulation.
-            :return: Instance de ListConsommationResponse contenant les énergies utilisées et les émissions de CO2 associées.
-            """
-            try:
-                list_energie_utilisee = []
-                list_emissions_co2 = []
-                for i in range(repetition):
-                    res = calculer_consommation(nombre)
-                    list_energie_utilisee.append(res.energie)
-                    list_emissions_co2.append(res.emissions_co2)
-
-                return ListConsommationResponse(
-                    energie=list_energie_utilisee,
-                    unite="kWh",
-                    emissions_co2=list_emissions_co2,
-                    unite_emissions="kgCO2"
-                )
-            except ValueError as e:
-                raise HTTPException(status_code=400, detail=str(e))
-
         @self.post(
             "/simulation_cable_temperature",
             response_model=SimulationCableTemperatureResponse
         )
         def simulation_cable_temperature_api(
-                temperature_ambiante: float= 25,
+                temperature_ambiante: float = 25,
                 vitesse_vent: float = 1,
                 intensite_courant: float = 300,
                 temperature_cable_initiale: float = 25,
@@ -320,8 +378,14 @@ class MyAPI(FastAPI):
         ):
             """
             API pour simuler la température d'un câble électrique.
-            :param request: Instance de SimulationCableTemperatureRequest contenant les paramètres de simulation.
-            :return: Instance de SimulationCableTemperatureResponse contenant les résultats de la simulation.
+            :param temperature_ambiante: Température ambiante (°C)
+            :param vitesse_vent: Vitesse du vent (m/s)
+            :param intensite_courant: Intensité (A)
+            :param temperature_cable_initiale: Température initiale du câble
+            :param duree_simulation_minutes: Durée de la simulation (minutes)
+            :param pas_temps_microseconde: Pas de temps pour la simulation (s)
+            :return: Instance de SimulationCableTemperatureResponse contenant les résultats de la
+                     simulation.
             """
             try:
                 return simuler_temperature_cable(
@@ -340,27 +404,105 @@ class MyAPI(FastAPI):
             response_model=MultipleSimulationCableTemperatureResponse
         )
         def simulation_cable_temperature_list_api(
-                duree_minutes: int = 30,
-                pas_seconde: int = 60,
-                pas_microseconde: float = 1e-6,
                 temperature_ambiante: float = 25,
                 vitesse_vent: float = 1,
                 intensite_courant: float = 300,
-                temperature_cable_initiale: float = 25
+                temperature_cable_initiale: float = 25,
+                pas_seconde: int = 60,
+                pas_microseconde: float = 1e-6,
+                duree_minutes: int = 30
         ):
             """
             API pour simuler la température d'un câble électrique sur plusieurs minutes.
-            :param duree_minutes: Nombre de minutes à simuler (par défaut 30).
-            :param pas_seconde: Pas de temps pour la simulation (s)
-            :param pas_microseconde: Pas de temps pour la simulation (s)
+
             :param temperature_ambiante: Température ambiante (°C)
             :param vitesse_vent: Vitesse du vent (m/s)
             :param intensite_courant: Intensité (A)
             :param temperature_cable_initiale: Température initiale du câble
-            :return: Instance de MultipleSimulationCableTemperatureResponse contenant les résultats de la simulation.
+            :param pas_seconde: Pas de temps pour la simulation (s)
+            :param pas_microseconde: Pas de temps pour la simulation (s)
+            :param duree_minutes: Nombre de minutes à simuler (par défaut 30).
+            :return: Instance de MultipleSimulationCableTemperatureResponse contenant les résultats
+                     de la simulation.
             """
             try:
                 return simulation_temperature_cable_sur_x_minutes(
+                    duree_minutes=duree_minutes,
+                    pas_seconde=pas_seconde,
+                    pas_microseconde=pas_microseconde,
+                    temperature_ambiante=temperature_ambiante,
+                    vitesse_vent=vitesse_vent,
+                    intensite_courant=intensite_courant,
+                    temperature_cable_initiale=temperature_cable_initiale
+                )
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.post(
+            "/simulation_cable_temperature_consommation",
+            response_model=SimulationCableTemperatureConsommationResponse
+        )
+        def simulation_cable_temperature_consommation_api(
+                temperature_ambiante: float = 25,
+                vitesse_vent: float = 1,
+                intensite_courant: float = 300,
+                temperature_cable_initiale: float = 25,
+                duree_simulation_minutes: int = 60,
+                pas_temps_microseconde: float = 1e-6
+        ):
+            """
+            API pour simuler la température d'un câble électrique avec consommation d'énergie.
+            :param temperature_ambiante: Température ambiante (°C)
+            :param vitesse_vent: Vitesse du vent (m/s)
+            :param intensite_courant: Intensité (A)
+            :param temperature_cable_initiale: Température initiale du câble
+            :param duree_simulation_minutes: Durée de la simulation (minutes)
+            :param pas_temps_microseconde: Pas de temps pour la simulation (s)
+            :param temperature_cable_initiale: Température initiale du câble
+            :param duree_simulation_minutes: Durée de la simulation (minutes)
+            :return: Instance de SimulationCableTemperatureResponse contenant les résultats de la
+                     simulation.
+            """
+            try:
+                return simuler_temperature_cable_avec_consommation(
+                    temperature_ambiante=temperature_ambiante,
+                    vitesse_vent=vitesse_vent,
+                    intensite_courant=intensite_courant,
+                    temperature_cable_initiale=temperature_cable_initiale,
+                    duree_simulation_secondes=duree_simulation_minutes,
+                    pas_temps_microseconde=pas_temps_microseconde
+                )
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.post(
+            "/simulation_cable_temperature_consommation_list",
+            response_model=MultipleSimulationCableTemperatureConsommationResponse
+        )
+        def simulation_cable_temperature_consommation_list_api(
+                temperature_ambiante: float = 25,
+                vitesse_vent: float = 1,
+                intensite_courant: float = 300,
+                temperature_cable_initiale: float = 25,
+                pas_seconde: int = 60,
+                pas_microseconde: float = 1e-6,
+                duree_minutes: int = 30
+        ):
+            """
+            API pour simuler la température d'un câble électrique avec consommation d'énergie sur
+            plusieurs minutes.
+            :param temperature_ambiante: Température ambiante (°C)
+            :param vitesse_vent: Vitesse du vent (m/s)
+            :param intensite_courant: Intensité (A)
+            :param temperature_cable_initiale: Température initiale du câble
+            :param pas_seconde: Pas de temps pour la simulation (s)
+            :param pas_microseconde: Pas de temps pour la simulation (s)
+            :param duree_minutes: Nombre de minutes à simuler (par défaut 30).
+            :return: Instance de MultipleSimulationCableTemperatureResponse contenant les résultats
+                     de la simulation.
+            """
+            try:
+                return simulation_temperature_cable_sur_x_minutes_avec_consommation(
                     duree_minutes=duree_minutes,
                     pas_seconde=pas_seconde,
                     pas_microseconde=pas_microseconde,
