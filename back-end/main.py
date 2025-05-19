@@ -33,6 +33,11 @@ emissions_co2_unit: str = "kgCO2"  # Unité des émissions de CO2
 ### Modèle de données ##############################################################################
 ####################################################################################################
 
+class ReadRootResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API racine.
+    """
+    message: str
 
 class SimulationCableTemperatureResponse(BaseModel):
     """
@@ -175,7 +180,6 @@ def simulation_temperature_cable_sur_x_minutes(
 
     minutes_seconde = duree_minutes * 60
     for tmp in range(0, minutes_seconde, pas_seconde):
-        minute = (tmp + pas_seconde) / 60
 
         res: SimulationCableTemperatureResponse = simuler_temperature_cable(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
@@ -330,16 +334,21 @@ class MyAPI(FastAPI):
         Ajoute des routes à l'application FastAPI.
         """
 
-        @self.get("/")
+        @self.get(
+            "/",
+            response_model=ReadRootResponse,
+        )
         def read_root():
             """
             Point de terminaison GET qui retourne un message de bienvenue.
             
             **Retour :**
-            - **message** (_str_) : Message de bienvenue pour vérifier que l'API fonctionne.
+            - Instance de `ReadRootResponse` contenant un message de bienvenue.
             
             """
-            return {"message": "Bienvenue sur l'API Eco-Num-ESIEE !"}
+            return ReadRootResponse(
+                message="Bienvenue sur l'API Eco-Num-ESIEE !"
+            )
 
         @self.post(
             "/simulation_cable_temperature",
@@ -357,15 +366,20 @@ class MyAPI(FastAPI):
             API pour simuler la température d’un câble électrique.
             
             **Paramètres :**
-            - **temperature_ambiante** (_float_, optionnel) : Température ambiante (_°C_, défaut : 25)
+            - **temperature_ambiante** (_float_, optionnel) : Température ambiante
+              (_°C_, défaut : 25)
             - **vitesse_vent** (_float_, optionnel) : Vitesse du vent (_m/s_, défaut : 1)
             - **intensite_courant** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
-            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble (_°C_, défaut : 25)
-            - **duree_simulation_minutes** (_int_, optionnel) : Durée de la simulation (_minutes_, défaut : 60)
-            - **pas_temps_microseconde** (_float_, optionnel) : Pas de temps pour la simulation (_s_, défaut : 1e-6)
+            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble
+              (_°C_, défaut : 25)
+            - **duree_simulation_minutes** (_int_, optionnel) : Durée de la simulation
+              (_minutes_, défaut : 60)
+            - **pas_temps_microseconde** (_float_, optionnel) : Pas de temps pour la simulation
+              (_s_, défaut : 1e-6)
             
             **Retour :**
-            Instance de `SimulationCableTemperatureResponse` contenant les résultats de la simulation.
+            - Instance de `SimulationCableTemperatureResponse` contenant les résultats de la
+              simulation.
             """
             try:
                 return simuler_temperature_cable(
@@ -396,16 +410,21 @@ class MyAPI(FastAPI):
             API permettant de simuler la température d’un câble électrique sur plusieurs minutes.
             
             **Paramètres :**
-            - **temperature_ambiante** (_float_, optionnel) : Température ambiante (_°C_, défaut : 25)
+            - **temperature_ambiante** (_float_, optionnel) : Température ambiante
+              (_°C_, défaut : 25)
             - **vitesse_vent** (_float_, optionnel) : Vitesse du vent (_m/s_, défaut : 1)
             - **intensite_courant** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
-            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble (_°C_, défaut : 25)
-            - **pas_seconde** (_int_, optionnel) : Pas de temps pour la simulation (_s_, défaut : 60)
-            - **pas_microseconde** (_float_, optionnel) : Pas de temps pour la simulation (_s_, défaut : 1e-6)
+            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble
+              (_°C_, défaut : 25)
+            - **pas_seconde** (_int_, optionnel) : Pas de temps pour la simulation
+              (_s_, défaut : 60)
+            - **pas_microseconde** (_float_, optionnel) : Pas de temps pour la simulation
+              (_s_, défaut : 1e-6)
             - **duree_minutes** (_int_, optionnel) : Nombre de minutes à simuler (_défaut : 30_)
             
             **Retour :**
-            Instance de `MultipleSimulationCableTemperatureResponse` contenant les résultats de la simulation.
+            - Instance de `MultipleSimulationCableTemperatureResponse` contenant les résultats de la
+              simulation.
             """
             try:
                 return simulation_temperature_cable_sur_x_minutes(
@@ -436,15 +455,20 @@ class MyAPI(FastAPI):
             API pour simuler la température d’un câble électrique avec consommation d’énergie.
             
             **Paramètres :**
-            - **temperature_ambiante** (_float_, optionnel) : Température ambiante (_°C_, défaut : 25)
+            - **temperature_ambiante** (_float_, optionnel) : Température ambiante
+              (_°C_, défaut : 25)
             - **vitesse_vent** (_float_, optionnel) : Vitesse du vent (_m/s_, défaut : 1)
             - **intensite_courant** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
-            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble (_°C_, défaut : 25)
-            - **duree_simulation_minutes** (_int_, optionnel) : Durée de la simulation (_minutes_, défaut : 60)
-            - **pas_temps_microseconde** (_float_, optionnel) : Pas de temps pour la simulation (_s_, défaut : 1e-6)
+            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble
+              (_°C_, défaut : 25)
+            - **duree_simulation_minutes** (_int_, optionnel) : Durée de la simulation
+              (_minutes_, défaut : 60)
+            - **pas_temps_microseconde** (_float_, optionnel) : Pas de temps pour la simulation
+              (_s_, défaut : 1e-6)
             
             **Retour :**
-            Instance de `SimulationCableTemperatureConsommationResponse` contenant les résultats de la simulation.
+            - Instance de `SimulationCableTemperatureConsommationResponse` contenant les résultats de
+              la simulation.
             """
             try:
                 return simuler_temperature_cable_avec_consommation(
@@ -472,19 +496,25 @@ class MyAPI(FastAPI):
                 duree_minutes: int = 30
         ):
             """
-            API permettant de simuler la température d’un câble électrique avec consommation d’énergie sur plusieurs minutes.
+            API permettant de simuler la température d’un câble électrique avec consommation
+            d’énergie sur plusieurs minutes.
             
             **Paramètres :**
-            - **temperature_ambiante** (_float_, optionnel) : Température ambiante (_°C_, défaut : 25)
+            - **temperature_ambiante** (_float_, optionnel) : Température ambiante
+              (_°C_, défaut : 25)
             - **vitesse_vent** (_float_, optionnel) : Vitesse du vent (_m/s_, défaut : 1)
             - **intensite_courant** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
-            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble (_°C_, défaut : 25)
-            - **pas_seconde** (_int_, optionnel) : Pas de temps pour la simulation (_s_, défaut : 60)
-            - **pas_microseconde** (_float_, optionnel) : Pas de temps pour la simulation (_s_, défaut : 1e-6)
+            - **temperature_cable_initiale** (_float_, optionnel) : Température initiale du câble
+              (_°C_, défaut : 25)
+            - **pas_seconde** (_int_, optionnel) : Pas de temps pour la simulation
+              (_s_, défaut : 60)
+            - **pas_microseconde** (_float_, optionnel) : Pas de temps pour la simulation
+              (_s_, défaut : 1e-6)
             - **duree_minutes** (_int_, optionnel) : Nombre de minutes à simuler (_défaut : 30_)
             
             **Retour :**
-            Instance de `MultipleSimulationCableTemperatureResponse` contenant les résultats de la simulation.
+            - Instance de `MultipleSimulationCableTemperatureResponse` contenant les résultats de la
+              simulation.
             """
             try:
                 return simulation_temperature_cable_sur_x_minutes_avec_consommation(
