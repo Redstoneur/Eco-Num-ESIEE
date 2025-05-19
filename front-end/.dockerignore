@@ -1,0 +1,18 @@
+# Node modules
+node_modules
+
+# IDE files
+.vscode/
+.idea/
+
+# Build directories
+dist/
+build/
+
+# Docker files
+.dockerignore
+Dockerfile
+
+# Git files
+.gitignore
+.git
