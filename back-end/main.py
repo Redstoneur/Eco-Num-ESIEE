@@ -23,6 +23,8 @@ from scipy.integrate import odeint
 ### Constantes #####################################################################################
 ####################################################################################################
 
+temperature_unit: str = "°C"  # Unité de la température
+temps_unit: str = "s"  # Unité du temps
 energie_utilisee_unit: str = "kWh"  # Unité de l'énergie utilisée
 emissions_co2_unit: str = "kgCO2"  # Unité des émissions de CO2
 
@@ -31,32 +33,15 @@ emissions_co2_unit: str = "kgCO2"  # Unité des émissions de CO2
 ### Modèle de données ##############################################################################
 ####################################################################################################
 
-class ConsommationResponse(BaseModel):
-    """
-    Modèle pour structurer la réponse de l'API de consommation.
-    """
-    energie: float
-    unite: str
-    emissions_co2: float
-    unite_emissions: str
-
-
-class ListConsommationResponse(BaseModel):
-    """
-    Modèle pour structurer la réponse de l'API de consommation.
-    """
-    energie: list[float]
-    unite: str
-    emissions_co2: list[float]
-    unite_emissions: str
-
 
 class SimulationCableTemperatureResponse(BaseModel):
     """
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale: float
+    temperature_finale_unit: str = temperature_unit
     temps_execution: float
+    temps_execution_unit: str = temps_unit
 
 
 class SimulationCableTemperatureConsommationResponse(BaseModel):
@@ -64,11 +49,13 @@ class SimulationCableTemperatureConsommationResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale: float
+    temperature_finale_unit: str = temperature_unit
     energie_utilisee: float
-    energie_utilisee_unit: str
+    energie_utilisee_unit: str = energie_utilisee_unit
     emissions_co2: float
-    emissions_co2_unit: str
+    emissions_co2_unit: str = emissions_co2_unit
     temps_execution: float
+    temps_execution_unit: str = temps_unit
 
 
 class MultipleSimulationCableTemperatureResponse(BaseModel):
@@ -76,7 +63,10 @@ class MultipleSimulationCableTemperatureResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale_list: List[float]
+    temperature_finale_unit: str = temperature_unit
     temps_execution: List[float]
+    temps_execution_cumule: float
+    temps_execution_unit: str = temps_unit
 
 
 class MultipleSimulationCableTemperatureConsommationResponse(BaseModel):
@@ -84,13 +74,16 @@ class MultipleSimulationCableTemperatureConsommationResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale_list: List[float]
+    temperature_finale_unit: str = temperature_unit
     energie_utilisee_list: List[float]
     energie_utilisee_cumule: float
-    energie_utilisee_unit: str
+    energie_utilisee_unit: str = energie_utilisee_unit
     emissions_co2_list: List[float]
     emissions_co2_cumule: float
-    emissions_co2_unit: str
+    emissions_co2_unit: str = emissions_co2_unit
     temps_execution: List[float]
+    temps_execution_cumule: float
+    temps_execution_unit: str = temps_unit
 
 
 ####################################################################################################
@@ -196,7 +189,8 @@ def simulation_temperature_cable_sur_x_minutes(
 
     return MultipleSimulationCableTemperatureResponse(
         temperature_finale_list=temperature_finale_list,
-        temps_execution=temps_execution
+        temps_execution=temps_execution,
+        temps_execution_cumule=sum(temps_execution)
     )
 
 
@@ -239,9 +233,7 @@ def simuler_temperature_cable_avec_consommation(
         return SimulationCableTemperatureConsommationResponse(
             temperature_finale=res.temperature_finale,
             energie_utilisee=energie_utilisee,
-            energie_utilisee_unit=energie_utilisee_unit,
-            emissions_co2=emissions_co2,  # round(emissions_co2, 4),  # Émissions de CO2 en kg
-            emissions_co2_unit=emissions_co2_unit,
+            emissions_co2=emissions_co2,
             temps_execution=res.temps_execution
         )
     except Exception as e:
@@ -279,7 +271,6 @@ def simulation_temperature_cable_sur_x_minutes_avec_consommation(
 
     minutes_seconde = duree_minutes * 60
     for tmp in range(0, minutes_seconde, pas_seconde):
-        minute = (tmp + pas_seconde) / 60
 
         res = simuler_temperature_cable_avec_consommation(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
@@ -296,12 +287,11 @@ def simulation_temperature_cable_sur_x_minutes_avec_consommation(
     return MultipleSimulationCableTemperatureConsommationResponse(
         temperature_finale_list=temperature_finale_list,
         energie_utilisee_list=energie_utilisee_list,
-        energie_utilisee_unit=energie_utilisee_unit,
-        emissions_co2_list=emissions_co2_list,
-        emissions_co2_unit=emissions_co2_unit,
-        emissions_co2_cumule=sum(emissions_co2_list),
         energie_utilisee_cumule=sum(energie_utilisee_list),
-        temps_execution=temps_execution
+        emissions_co2_list=emissions_co2_list,
+        emissions_co2_cumule=sum(emissions_co2_list),
+        temps_execution=temps_execution,
+        temps_execution_cumule=sum(temps_execution)
     )
 
 
