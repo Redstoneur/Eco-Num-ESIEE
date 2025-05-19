@@ -148,10 +148,6 @@ def simuler_temperature_cable(
 
     final_tc: float = float(tc_sol[-1])
 
-    print(f"Final Temperature: {final_tc:.2f}°C")
-    print(f"Execution Time: {end_time - start_time:.2f} s")
-    print("Simulation completed.")
-
     return SimulationCableTemperatureResponse(
         temperature_finale=final_tc,
         temps_execution=end_time - start_time
@@ -187,7 +183,6 @@ def simulation_temperature_cable_sur_x_minutes(
     minutes_seconde = duree_minutes * 60
     for tmp in range(0, minutes_seconde, pas_seconde):
         minute = (tmp + pas_seconde) / 60
-        print(f"Simulation de la minute {minute}...")
 
         res: SimulationCableTemperatureResponse = simuler_temperature_cable(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
@@ -198,11 +193,6 @@ def simulation_temperature_cable_sur_x_minutes(
         temperature_finale_list.append(res.temperature_finale)
         temps_execution.append(res.temps_execution)
         temperature_cable_actuel = res.temperature_finale
-
-        print(
-            f"Minute {minute}: Tc = {res.temperature_finale:.2f}°C,"
-            f"Temps = {res.temps_execution:.2f} s"
-        )
 
     return MultipleSimulationCableTemperatureResponse(
         temperature_finale_list=temperature_finale_list,
@@ -290,7 +280,6 @@ def simulation_temperature_cable_sur_x_minutes_avec_consommation(
     minutes_seconde = duree_minutes * 60
     for tmp in range(0, minutes_seconde, pas_seconde):
         minute = (tmp + pas_seconde) / 60
-        print(f"Simulation de la minute {minute}...")
 
         res = simuler_temperature_cable_avec_consommation(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
@@ -303,12 +292,6 @@ def simulation_temperature_cable_sur_x_minutes_avec_consommation(
         emissions_co2_list.append(res.emissions_co2)
         temps_execution.append(res.temps_execution)
         temperature_cable_actuel = res.temperature_finale
-
-        print(
-            f"Minute {minute}: Tc = {res.temperature_finale:.2f}°C,"
-            f" Énergie = {res.energie_utilisee:.4f} Wh, CO2 = {res.emissions_co2:.2f} g, "
-            f"Temps = {res.temps_execution:.2f} s"
-        )
 
     return MultipleSimulationCableTemperatureConsommationResponse(
         temperature_finale_list=temperature_finale_list,
