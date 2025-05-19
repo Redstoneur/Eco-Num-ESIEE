@@ -13,3 +13,6 @@ Dockerfile
 # Git files
 .gitignore
 .git
+
+# Script Folder
+scripts/
