@@ -5,10 +5,6 @@ import numpy as np
 import plotly.graph_objects as go
 from scipy.integrate import odeint
 
-# --- Constantes ---
-R_cable: float = 0.0001  # Ohms (résistance du câble)
-CO2_factor: int = 82  # g CO2 / kWh
-
 
 # --- Équation différentielle ---
 def d_tc_dt(tc: float, t: float, ta: float, ws: float, i: float) -> float:
@@ -34,7 +30,7 @@ def simulate_cable_temp(
         tc_initial: float,
         simulation_time_min: int = 60,
         microsecond_step: float = 1e-6
-) -> Tuple[float, float, float, float]:
+) -> Tuple[float, float]:
     """
     Simule la température du câble sur une période donnée.
     :param ta: Température ambiante (°C)
@@ -54,10 +50,8 @@ def simulate_cable_temp(
     end_time: float = time.time()
 
     final_tc: float = float(tc_sol[-1])
-    energy_wh: float = (R_cable * i ** 2 * total_time_s) / 3600
-    co2_emitted: float = energy_wh * CO2_factor
 
-    return final_tc, energy_wh, co2_emitted, end_time - start_time
+    return final_tc, end_time - start_time
 
 
 # --- Simulation répétée 30 fois pour faire une courbe 30 minutes ---
@@ -65,7 +59,7 @@ def run_x_min_simulation(
         minutes: int = 30,
         step: int = 1,
         microsecond_step: float = 1e-6
-) -> Tuple[List[float], List[float], List[float], List[float]]:
+) -> Tuple[List[float], List[float]]:
     """
     Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
     :param minutes: Nombre de minutes à simuler (par défaut 30).
@@ -79,8 +73,6 @@ def run_x_min_simulation(
     tc_initial: float = 25  # Température initiale du câble
 
     tc_list: List[float] = []
-    energy_list: List[float] = []
-    co2_list: List[float] = []
     exec_times: List[float] = []
 
     tc_current: float = tc_initial
@@ -93,30 +85,28 @@ def run_x_min_simulation(
         e: float
         co2: float
         exec_time: float
-        tc, e, co2, exec_time = simulate_cable_temp(
+        tc, exec_time = simulate_cable_temp(
             ta, ws, i, tc_current,
             simulation_time_min=step,
             microsecond_step=microsecond_step
         )
         tc_list.append(tc)
-        energy_list.append(e)
-        co2_list.append(co2)
         exec_times.append(exec_time)
         tc_current = tc  # Utiliser la temp finale comme nouvelle initiale
 
         print(
-            f"Minute {minute}: Tc = {tc:.2f}°C, Énergie = {e:.4f} Wh, CO2 = {co2:.2f} g, "
+            f"Minute {minute}: Tc = {tc:.2f}°C, "
             f"Temps = {exec_time:.2f} s"
         )
 
-    return tc_list, energy_list, co2_list, exec_times
+    return tc_list, exec_times
 
 
 def run_x_min_simulation_simple(
         minutes: int = 30,
         step: int = 1,
         microsecond_step: float = 1e-6
-) -> Tuple[List[float], List[float], List[float], List[float]]:
+) -> Tuple[List[float], List[float]]:
     """
     Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
     :param minutes: Nombre de minutes à simuler
@@ -134,21 +124,15 @@ def run_x_min_simulation_simple(
 # --- Plotting avec Plotly ---
 def plot_results(
         tc_list: List[float],
-        energy_list: List[float],
-        co2_list: List[float],
         minutes: int = 30
 ) -> None:
     """
     Affiche les résultats de la simulation sous forme de graphique interactif.
     :param tc_list: liste des températures du câble
-    :param energy_list: liste des énergies utilisées
-    :param co2_list: liste des émissions de CO2
     :param minutes: Nombre de minutes simulées
     """
     fig: go.Figure = go.Figure()
     fig.add_trace(go.Scatter(y=tc_list, mode='lines+markers', name='Température câble (°C)'))
-    fig.add_trace(go.Scatter(y=np.cumsum(energy_list), mode='lines', name='Énergie cumulée (Wh)'))
-    fig.add_trace(go.Scatter(y=np.cumsum(co2_list), mode='lines', name='CO2 cumulé (g)'))
 
     fig.update_layout(
         title=f"Simulation température câble sur {minutes} minutes",
@@ -162,11 +146,18 @@ def plot_results(
 
 # --- Exécution principale ---
 if __name__ == "__main__":
+    # Paramètres de simulation
+    # Température ambiante (°C)
     minutes: int = 30
+    # Pas de temps pour la simulation (minutes)
     step: int = 1
+    # Pas de temps pour la simulation (s)
+    # `0.01` pour une simulation plus rapide
+    # `1e-6` pour une simulation plus précise
     microsecond_step: float = 1e-6
-    tc_list, energy_list, co2_list, exec_times = run_x_min_simulation_simple(
+
+    tc_list, exec_times = run_x_min_simulation_simple(
         minutes=minutes, step=step,
         microsecond_step=microsecond_step
     )
-    plot_results(tc_list, energy_list, co2_list, minutes)
+    plot_results(tc_list, minutes)
