@@ -24,33 +24,33 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
 
-#  client:
-#    build:
-#      context: ./front-end
-#      dockerfile: Dockerfile
-#    container_name: Client
-#    image: eco-num-esiee-client
-#    restart: always
-#    networks:
-#      ai-net:
-#        ipv4_address: 172.18.0.11
-#    ports:
-#      - "3000:3000"
-#    depends_on:
-#      - server
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: '1.0' # Limite à 1 CPU
-#          memory: '512M' # Limite à 512 MB de RAM
-#        reservations:
-#          cpus: '0.5' # Réservation de 0.5 CPU
-#          memory: '256M' # Réservation de 256 MB de RAM
-#    environment:
-#      - SERVER_URL=http://172.18.0.10:8000
-#      - TZ=Europe/Paris
-#      - "/etc/localtime:/etc/localtime:ro"
-#      - "/etc/timezone:/etc/timezone:ro"
+  client:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    container_name: Client
+    image: eco-num-esiee-client
+    restart: always
+    networks:
+      ai-net:
+        ipv4_address: 172.18.0.11
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0' # Limite à 1 CPU
+          memory: '512M' # Limite à 512 MB de RAM
+        reservations:
+          cpus: '0.5' # Réservation de 0.5 CPU
+          memory: '256M' # Réservation de 256 MB de RAM
+    environment:
+      - SERVER_URL=http://172.18.0.10:8000
+      - TZ=Europe/Paris
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
 
 networks:
   ai-net:
