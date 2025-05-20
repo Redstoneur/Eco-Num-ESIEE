@@ -64,7 +64,7 @@ const envoyerSimulation = async () => {
 
     graphData.value = [
       {
-        x: result.value.final_temperature_list.map((_, i: number) => i),
+        x: result.value.final_temperature_list.map((_: number, i: number) => i),
         y: result.value.final_temperature_list,
         type: "scatter",
         mode: "lines+markers",
