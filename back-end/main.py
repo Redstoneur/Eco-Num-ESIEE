@@ -23,10 +23,10 @@ from scipy.integrate import odeint
 ### Constantes #####################################################################################
 ####################################################################################################
 
-temperature_unit: str = "°C"  # Unité de la température
-temps_unit: str = "s"  # Unité du temps
-energie_utilisee_unit: str = "kWh"  # Unité de l'énergie utilisée
-emissions_co2_unit: str = "kgCO2"  # Unité des émissions de CO2
+TEMPERATURE_UNIT: str = "°C"  # Unité de la température
+TIME_UNIT: str = "s"  # Unité du temps
+ENERGY_USED_UNIT: str = "kWh"  # Unité de l'énergie utilisée
+CO2_EMISSIONS_UNIT: str = "kgCO2"  # Unité des émissions de CO2
 
 
 ####################################################################################################
@@ -39,14 +39,22 @@ class ReadRootResponse(BaseModel):
     """
     message: str
 
+
+class HealthCheckResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API de vérification de l'état.
+    """
+    status: str = "alive"
+
+
 class SimulationCableTemperatureResponse(BaseModel):
     """
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale: float
-    temperature_finale_unit: str = temperature_unit
+    temperature_finale_unit: str = TEMPERATURE_UNIT
     temps_execution: float
-    temps_execution_unit: str = temps_unit
+    temps_execution_unit: str = TIME_UNIT
 
 
 class SimulationCableTemperatureConsommationResponse(BaseModel):
@@ -54,13 +62,13 @@ class SimulationCableTemperatureConsommationResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale: float
-    temperature_finale_unit: str = temperature_unit
+    temperature_finale_unit: str = TEMPERATURE_UNIT
     energie_utilisee: float
-    energie_utilisee_unit: str = energie_utilisee_unit
+    energie_utilisee_unit: str = ENERGY_USED_UNIT
     emissions_co2: float
-    emissions_co2_unit: str = emissions_co2_unit
+    emissions_co2_unit: str = CO2_EMISSIONS_UNIT
     temps_execution: float
-    temps_execution_unit: str = temps_unit
+    temps_execution_unit: str = TIME_UNIT
 
 
 class MultipleSimulationCableTemperatureResponse(BaseModel):
@@ -68,10 +76,10 @@ class MultipleSimulationCableTemperatureResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale_list: List[float]
-    temperature_finale_unit: str = temperature_unit
+    temperature_finale_unit: str = TEMPERATURE_UNIT
     temps_execution: List[float]
     temps_execution_cumule: float
-    temps_execution_unit: str = temps_unit
+    temps_execution_unit: str = TIME_UNIT
 
 
 class MultipleSimulationCableTemperatureConsommationResponse(BaseModel):
@@ -79,16 +87,35 @@ class MultipleSimulationCableTemperatureConsommationResponse(BaseModel):
     Modèle pour structurer la réponse de l'API de simulation de température de câble.
     """
     temperature_finale_list: List[float]
-    temperature_finale_unit: str = temperature_unit
+    temperature_finale_unit: str = TEMPERATURE_UNIT
     energie_utilisee_list: List[float]
     energie_utilisee_cumule: float
-    energie_utilisee_unit: str = energie_utilisee_unit
+    energie_utilisee_unit: str = ENERGY_USED_UNIT
     emissions_co2_list: List[float]
     emissions_co2_cumule: float
-    emissions_co2_unit: str = emissions_co2_unit
+    emissions_co2_unit: str = CO2_EMISSIONS_UNIT
     temps_execution: List[float]
     temps_execution_cumule: float
-    temps_execution_unit: str = temps_unit
+    temps_execution_unit: str = TIME_UNIT
+
+
+class GlobalConsommationResponse(BaseModel):
+    """
+    Modèle pour structurer la réponse de l'API pour voir la consommation globale.
+    """
+    Energie_utilisee: float = 0
+    Energie_utilisee_list: List[float] = []
+    Energie_utilisee_unit: str = ENERGY_USED_UNIT
+    Emissions_co2: float = 0
+    Emissions_co2_list: List[float] = []
+    Emissions_co2_unit: str = CO2_EMISSIONS_UNIT
+
+
+####################################################################################################
+### Variables globales #############################################################################
+####################################################################################################
+
+global_consommation: GlobalConsommationResponse = GlobalConsommationResponse()
 
 
 ####################################################################################################
@@ -180,7 +207,6 @@ def simulation_temperature_cable_sur_x_minutes(
 
     minutes_seconde = duree_minutes * 60
     for tmp in range(0, minutes_seconde, pas_seconde):
-
         res: SimulationCableTemperatureResponse = simuler_temperature_cable(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
             duree_simulation_secondes=pas_seconde,
@@ -275,7 +301,6 @@ def simulation_temperature_cable_sur_x_minutes_avec_consommation(
 
     minutes_seconde = duree_minutes * 60
     for tmp in range(0, minutes_seconde, pas_seconde):
-
         res = simuler_temperature_cable_avec_consommation(
             temperature_ambiante, vitesse_vent, intensite_courant, temperature_cable_actuel,
             duree_simulation_secondes=pas_seconde,
@@ -297,6 +322,40 @@ def simulation_temperature_cable_sur_x_minutes_avec_consommation(
         temps_execution=temps_execution,
         temps_execution_cumule=sum(temps_execution)
     )
+
+
+def update_global_consommation(var: SimulationCableTemperatureConsommationResponse):
+    """
+    Met à jour la consommation globale.
+    :param var: Instance de SimulationCableTemperatureConsommationResponse contenant les données de
+                consommation.
+    """
+    global global_consommation
+    global_consommation.Energie_utilisee += var.energie_utilisee
+    global_consommation.Energie_utilisee_list.append(var.energie_utilisee)
+    global_consommation.Emissions_co2 += var.emissions_co2
+    global_consommation.Emissions_co2_list.append(var.emissions_co2)
+
+
+def update_global_consommation_list(var: MultipleSimulationCableTemperatureConsommationResponse):
+    """
+    Met à jour la consommation globale avec une liste de valeurs.
+    :param var: Instance de MultipleSimulationCableTemperatureConsommationResponse contenant les
+                données de consommation.
+    """
+    global global_consommation
+    global_consommation.Energie_utilisee += var.energie_utilisee_cumule
+    global_consommation.Energie_utilisee_list.extend(var.energie_utilisee_list)
+    global_consommation.Emissions_co2 += var.emissions_co2_cumule
+    global_consommation.Emissions_co2_list.extend(var.emissions_co2_list)
+
+
+def reset_global_consommation():
+    """
+    Réinitialise la consommation globale.
+    """
+    global global_consommation
+    global_consommation = GlobalConsommationResponse()
 
 
 ####################################################################################################
@@ -336,7 +395,8 @@ class MyAPI(FastAPI):
 
         @self.get(
             "/",
-            response_model=ReadRootResponse,
+            tags=["Root"],
+            response_model=ReadRootResponse
         )
         def read_root():
             """
@@ -350,8 +410,24 @@ class MyAPI(FastAPI):
                 message="Bienvenue sur l'API Eco-Num-ESIEE !"
             )
 
+        @self.get(
+            "/health",
+            tags=["Health"],
+            response_model=HealthCheckResponse
+        )
+        def health_check():
+            """
+            Point de terminaison GET pour vérifier l'état de l'API.
+
+            **Retour :**
+            - Instance de `HealthCheckResponse` contenant le statut de l'API.
+
+            """
+            return HealthCheckResponse()
+
         @self.post(
             "/simulation_cable_temperature",
+            tags=["Simulation"],
             response_model=SimulationCableTemperatureResponse
         )
         def simulation_cable_temperature_api(
@@ -382,19 +458,28 @@ class MyAPI(FastAPI):
               simulation.
             """
             try:
-                return simuler_temperature_cable(
-                    temperature_ambiante=temperature_ambiante,
-                    vitesse_vent=vitesse_vent,
-                    intensite_courant=intensite_courant,
-                    temperature_cable_initiale=temperature_cable_initiale,
-                    duree_simulation_secondes=duree_simulation_minutes,
-                    pas_temps_microseconde=pas_temps_microseconde
+                res: SimulationCableTemperatureConsommationResponse = (
+                    simuler_temperature_cable_avec_consommation(
+                        temperature_ambiante=temperature_ambiante,
+                        vitesse_vent=vitesse_vent,
+                        intensite_courant=intensite_courant,
+                        temperature_cable_initiale=temperature_cable_initiale,
+                        duree_simulation_secondes=duree_simulation_minutes,
+                        pas_temps_microseconde=pas_temps_microseconde
+                    )
+                )
+
+                update_global_consommation(res)
+                return SimulationCableTemperatureResponse(
+                    temperature_finale=res.temperature_finale,
+                    temps_execution=res.temps_execution
                 )
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
         @self.post(
             "/simulation_cable_temperature_list",
+            tags=["Simulation"],
             response_model=MultipleSimulationCableTemperatureResponse
         )
         def simulation_cable_temperature_list_api(
@@ -427,20 +512,31 @@ class MyAPI(FastAPI):
               simulation.
             """
             try:
-                return simulation_temperature_cable_sur_x_minutes(
-                    duree_minutes=duree_minutes,
-                    pas_seconde=pas_seconde,
-                    pas_microseconde=pas_microseconde,
-                    temperature_ambiante=temperature_ambiante,
-                    vitesse_vent=vitesse_vent,
-                    intensite_courant=intensite_courant,
-                    temperature_cable_initiale=temperature_cable_initiale
+                res: MultipleSimulationCableTemperatureConsommationResponse = (
+                    simulation_temperature_cable_sur_x_minutes_avec_consommation(
+                        duree_minutes=duree_minutes,
+                        pas_seconde=pas_seconde,
+                        pas_microseconde=pas_microseconde,
+                        temperature_ambiante=temperature_ambiante,
+                        vitesse_vent=vitesse_vent,
+                        intensite_courant=intensite_courant,
+                        temperature_cable_initiale=temperature_cable_initiale
+                    )
                 )
+
+                update_global_consommation_list(res)
+                return MultipleSimulationCableTemperatureResponse(
+                    temperature_finale_list=res.temperature_finale_list,
+                    temps_execution=res.temps_execution,
+                    temps_execution_cumule=res.temps_execution_cumule
+                )
+
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
         @self.post(
             "/simulation_cable_temperature_consommation",
+            tags=["Simulation"],
             response_model=SimulationCableTemperatureConsommationResponse
         )
         def simulation_cable_temperature_consommation_api(
@@ -467,23 +563,30 @@ class MyAPI(FastAPI):
               (_s_, défaut : 1e-6)
             
             **Retour :**
-            - Instance de `SimulationCableTemperatureConsommationResponse` contenant les résultats de
-              la simulation.
+            - Instance de `SimulationCableTemperatureConsommationResponse` contenant les résultats
+              de la simulation.
             """
             try:
-                return simuler_temperature_cable_avec_consommation(
-                    temperature_ambiante=temperature_ambiante,
-                    vitesse_vent=vitesse_vent,
-                    intensite_courant=intensite_courant,
-                    temperature_cable_initiale=temperature_cable_initiale,
-                    duree_simulation_secondes=duree_simulation_minutes,
-                    pas_temps_microseconde=pas_temps_microseconde
+                res: SimulationCableTemperatureConsommationResponse = (
+                    simuler_temperature_cable_avec_consommation(
+                        temperature_ambiante=temperature_ambiante,
+                        vitesse_vent=vitesse_vent,
+                        intensite_courant=intensite_courant,
+                        temperature_cable_initiale=temperature_cable_initiale,
+                        duree_simulation_secondes=duree_simulation_minutes,
+                        pas_temps_microseconde=pas_temps_microseconde
+                    )
                 )
+
+                update_global_consommation(res)
+
+                return res
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
         @self.post(
             "/simulation_cable_temperature_consommation_list",
+            tags=["Simulation"],
             response_model=MultipleSimulationCableTemperatureConsommationResponse
         )
         def simulation_cable_temperature_consommation_list_api(
@@ -517,15 +620,57 @@ class MyAPI(FastAPI):
               simulation.
             """
             try:
-                return simulation_temperature_cable_sur_x_minutes_avec_consommation(
-                    duree_minutes=duree_minutes,
-                    pas_seconde=pas_seconde,
-                    pas_microseconde=pas_microseconde,
-                    temperature_ambiante=temperature_ambiante,
-                    vitesse_vent=vitesse_vent,
-                    intensite_courant=intensite_courant,
-                    temperature_cable_initiale=temperature_cable_initiale
+                res: MultipleSimulationCableTemperatureConsommationResponse = (
+                    simulation_temperature_cable_sur_x_minutes_avec_consommation(
+                        duree_minutes=duree_minutes,
+                        pas_seconde=pas_seconde,
+                        pas_microseconde=pas_microseconde,
+                        temperature_ambiante=temperature_ambiante,
+                        vitesse_vent=vitesse_vent,
+                        intensite_courant=intensite_courant,
+                        temperature_cable_initiale=temperature_cable_initiale
+                    )
                 )
+
+                update_global_consommation_list(res)
+                return res
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.get(
+            "/global_consommation",
+            tags=["Global Consommation"],
+            response_model=GlobalConsommationResponse
+        )
+        def global_consommation_api():
+            """
+            API pour obtenir la consommation globale.
+
+            **Retour :**
+            - Instance de `GlobalConsommationResponse` contenant les données de consommation
+              générale.
+            """
+            try:
+                return global_consommation
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.post(
+            "/reset_global_consommation",
+            tags=["Global Consommation"],
+            response_model=GlobalConsommationResponse
+        )
+        def reset_global_consommation_api():
+            """
+            API pour réinitialiser la consommation globale.
+
+            **Retour :**
+            - Instance de `GlobalConsommationResponse` contenant les données de consommation
+              réinitialisées.
+            """
+            try:
+                reset_global_consommation()
+                return global_consommation
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
