@@ -113,8 +113,8 @@ export default {
         wind_speed?: number;
         current_intensity?: number;
         initial_cable_temperature?: number;
-        step_seconds?: number;
-        step_microsecond?: number;
+        simulation_duration_minutes?: number;
+        time_step_microsecond?: number;
         duration_minutes?: number;
     }): Promise<MultipleCableTemperatureSimulationResponse> {
         let url = '/cable_temperature_simulation_list';
@@ -123,8 +123,8 @@ export default {
         if (params.wind_speed !== undefined) url += 'wind_speed=' + params.wind_speed + '&';
         if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
         if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
-        if (params.step_seconds !== undefined) url += 'step_seconds=' + params.step_seconds + '&';
-        if (params.step_microsecond !== undefined) url += 'step_microsecond=' + params.step_microsecond + '&';
+        if (params.simulation_duration_minutes !== undefined) url += 'simulation_duration_minutes=' + params.simulation_duration_minutes + '&';
+        if (params.time_step_microsecond !== undefined) url += 'time_step_microsecond=' + params.time_step_microsecond + '&';
         if (params.duration_minutes !== undefined) url += 'duration_minutes=' + params.duration_minutes + '&';
 
         if (url.endsWith('&')) {
@@ -170,8 +170,8 @@ export default {
         wind_speed?: number;
         current_intensity?: number;
         initial_cable_temperature?: number;
-        step_seconds?: number;
-        step_microsecond?: number;
+        simulation_duration_minutes?: number;
+        time_step_microsecond?: number;
         duration_minutes?: number;
     }): Promise<MultipleCableTemperatureConsumptionSimulationResponse> {
         let url = '/cable_temperature_consumption_simulation_list';
@@ -180,8 +180,8 @@ export default {
         if (params.wind_speed !== undefined) url += 'wind_speed=' + params.wind_speed + '&';
         if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
         if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
-        if (params.step_seconds !== undefined) url += 'step_seconds=' + params.step_seconds + '&';
-        if (params.step_microsecond !== undefined) url += 'step_microsecond=' + params.step_microsecond + '&';
+        if (params.simulation_duration_minutes !== undefined) url += 'simulation_duration_minutes=' + params.simulation_duration_minutes + '&';
+        if (params.time_step_microsecond !== undefined) url += 'time_step_microsecond=' + params.time_step_microsecond + '&';
         if (params.duration_minutes !== undefined) url += 'duration_minutes=' + params.duration_minutes + '&';
 
         if (url.endsWith('&')) {

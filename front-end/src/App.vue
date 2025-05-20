@@ -12,8 +12,8 @@ const temperature_cable_initiale = ref<number>(25);
 const duree_minutes = ref<number>(30);
 
 // Paramètres fixes
-const pas_seconde = 60;
-const pas_microseconde = 0.1;
+const simulation_duration_minutes = ref<number>(60);
+const time_step_microsecond = ref<number>(0.1);
 
 const loading = ref(false);
 const result = ref<any>(null);
@@ -39,8 +39,8 @@ const envoyerSimulation = async () => {
       wind_speed: vitesse_vent.value,
       current_intensity: intensite_courant.value,
       initial_cable_temperature: temperature_cable_initiale.value,
-      step_seconds: pas_seconde,
-      step_microsecond: pas_microseconde,
+      simulation_duration_minutes: simulation_duration_minutes.value,
+      time_step_microsecond: time_step_microsecond.value,
       duration_minutes: duree_minutes.value,
     });
 
@@ -100,17 +100,17 @@ const envoyerSimulation = async () => {
         <input type="number" v-model="duree_minutes"/>
       </div>
       <div class="form-group">
-        <label>Pas (seconde)</label>
-        <input type="number" :value="pas_seconde"/>
+        <label>Pas de recherche (seconde)</label>
+        <input type="number" :value="simulation_duration_minutes"/>
       </div>
       <div class="form-group">
-        <label>Pas (microseconde)</label>
-        <input type="number" :value="pas_microseconde"/>
+        <label>Pas de calcul (seconde)</label>
+        <input type="number" :value="time_step_microsecond"/>
       </div>
     </form>
 
     <div class="actions">
-      <button @click="envoyerSimulation" :disabled="loading">
+      <button type="submit" @click="envoyerSimulation" :disabled="loading">
         Lancer la simulation
       </button>
     </div>
