@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { VuePlotly } from "vue3-plotly";
+import apiClient from './fonctions/api_client';
 
 // Paramètres utilisateur
 const temperature_ambiante = ref<number>(25);
@@ -11,7 +12,7 @@ const duree_minutes = ref<number>(30);
 
 // Paramètres fixes
 const pas_seconde = 60;
-const pas_microseconde = 0.01;
+const pas_microseconde = 0.1;
 
 const loading = ref(false);
 const result = ref<any>(null);
@@ -32,35 +33,15 @@ const envoyerSimulation = async () => {
   graphData.value = [];
 
   try {
-    const url = new URL(
-      "http://192.168.86.117:8000/cable_temperature_consumption_simulation_list"
-    );
-    url.searchParams.set(
-      "ambient_temperature",
-      temperature_ambiante.value.toString()
-    );
-    url.searchParams.set("wind_speed", vitesse_vent.value.toString());
-    url.searchParams.set(
-      "current_intensity",
-      intensite_courant.value.toString()
-    );
-    url.searchParams.set(
-      "initial_cable_temperature",
-      temperature_cable_initiale.value.toString()
-    );
-    url.searchParams.set("step_seconds", pas_seconde.toString());
-    url.searchParams.set("step_microsecond", pas_microseconde.toString());
-    url.searchParams.set("duration_minutes", duree_minutes.value.toString());
-
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-      },
+    result.value = await apiClient.simulateCableTemperatureConsumptionList({
+      ambient_temperature: temperature_ambiante.value,
+      wind_speed: vitesse_vent.value,
+      current_intensity: intensite_courant.value,
+      initial_cable_temperature: temperature_cable_initiale.value,
+      step_seconds: pas_seconde,
+      step_microsecond: pas_microseconde,
+      duration_minutes: duree_minutes.value,
     });
-
-    if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
-    result.value = await response.json();
 
     graphData.value = [
       {

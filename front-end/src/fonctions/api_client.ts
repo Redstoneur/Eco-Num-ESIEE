@@ -1,8 +1,8 @@
 import axios from 'axios';
-import type { AxiosInstance } from 'axios';
+import type {AxiosInstance} from 'axios';
 
 const apiClient: AxiosInstance = axios.create({
-    baseURL: 'http://127.0.0.1:8000', // Remplacez par l'URL de votre serveur FastAPI
+    baseURL: 'http://localhost:8000', // Remplacez par l'URL de votre serveur FastAPI
     headers: {
         'Content-Type': 'application/json',
     },
@@ -89,9 +89,21 @@ export default {
         simulation_duration_minutes?: number;
         time_step_microsecond?: number;
     }): Promise<CableTemperatureSimulationResponse> {
+        let url = '/cable_temperature_simulation';
+        url += '/?';
+        if (params.ambient_temperature !== undefined) url += 'ambient_temperature=' + params.ambient_temperature + '&';
+        if (params.wind_speed !== undefined) url += 'wind_speed=' + params.wind_speed + '&';
+        if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
+        if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
+        if (params.simulation_duration_minutes !== undefined) url += 'simulation_duration_minutes=' + params.simulation_duration_minutes + '&';
+        if (params.time_step_microsecond !== undefined) url += 'time_step_microsecond=' + params.time_step_microsecond + '&';
+
+        if (url.endsWith('&')) {
+            url = url.slice(0, -1);
+        }
+
         const response = await apiClient.post<CableTemperatureSimulationResponse>(
-            '/cable_temperature_simulation',
-            params
+            url
         );
         return response.data;
     },
@@ -105,6 +117,20 @@ export default {
         step_microsecond?: number;
         duration_minutes?: number;
     }): Promise<MultipleCableTemperatureSimulationResponse> {
+        let url = '/cable_temperature_simulation_list';
+        url += '/?';
+        if (params.ambient_temperature !== undefined) url += 'ambient_temperature=' + params.ambient_temperature + '&';
+        if (params.wind_speed !== undefined) url += 'wind_speed=' + params.wind_speed + '&';
+        if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
+        if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
+        if (params.step_seconds !== undefined) url += 'step_seconds=' + params.step_seconds + '&';
+        if (params.step_microsecond !== undefined) url += 'step_microsecond=' + params.step_microsecond + '&';
+        if (params.duration_minutes !== undefined) url += 'duration_minutes=' + params.duration_minutes + '&';
+
+        if (url.endsWith('&')) {
+            url = url.slice(0, -1);
+        }
+
         const response = await apiClient.post<MultipleCableTemperatureSimulationResponse>(
             '/cable_temperature_simulation_list',
             params
@@ -120,9 +146,21 @@ export default {
         simulation_duration_minutes?: number;
         time_step_microsecond?: number;
     }): Promise<CableTemperatureConsumptionSimulationResponse> {
+        let url = '/cable_temperature_consumption_simulation';
+        url += '/?';
+        if (params.ambient_temperature !== undefined) url += 'ambient_temperature=' + params.ambient_temperature + '&';
+        if (params.wind_speed !== undefined) url += 'wind_speed=' + params.wind_speed + '&';
+        if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
+        if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
+        if (params.simulation_duration_minutes !== undefined) url += 'simulation_duration_minutes=' + params.simulation_duration_minutes + '&';
+        if (params.time_step_microsecond !== undefined) url += 'time_step_microsecond=' + params.time_step_microsecond + '&';
+
+        if (url.endsWith('&')) {
+            url = url.slice(0, -1);
+        }
+
         const response = await apiClient.post<CableTemperatureConsumptionSimulationResponse>(
-            '/cable_temperature_consumption_simulation',
-            params
+            url
         );
         return response.data;
     },
@@ -136,9 +174,22 @@ export default {
         step_microsecond?: number;
         duration_minutes?: number;
     }): Promise<MultipleCableTemperatureConsumptionSimulationResponse> {
-        const response = await apiClient.post<MultipleCableTemperatureConsumptionSimulationResponse>(
-            '/cable_temperature_consumption_simulation_list',
-            params
+        let url = '/cable_temperature_consumption_simulation_list';
+        url += '/?';
+        if (params.ambient_temperature !== undefined) url += 'ambient_temperature=' + params.ambient_temperature + '&';
+        if (params.wind_speed !== undefined) url += 'wind_speed=' + params.wind_speed + '&';
+        if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
+        if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
+        if (params.step_seconds !== undefined) url += 'step_seconds=' + params.step_seconds + '&';
+        if (params.step_microsecond !== undefined) url += 'step_microsecond=' + params.step_microsecond + '&';
+        if (params.duration_minutes !== undefined) url += 'duration_minutes=' + params.duration_minutes + '&';
+
+        if (url.endsWith('&')) {
+            url = url.slice(0, -1);
+        }
+
+        const response = await apiClient.post(
+            url
         );
         return response.data;
     },
