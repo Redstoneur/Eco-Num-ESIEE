@@ -428,7 +428,19 @@ class MyAPI(FastAPI):
         @self.post(
             "/cable_temperature_simulation",
             tags=["Simulation"],
-            response_model=CableTemperatureSimulationResponse
+            response_model=CableTemperatureSimulationResponse,
+            responses={
+                400: {
+                    "description": "Erreur lors de la simulation de la température du câble.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Erreur lors de la simulation de la température du câble."
+                            }
+                        }
+                    }
+                }
+            }
         )
         def cable_temperature_simulation_api(
                 ambient_temperature: float = 25,
@@ -480,7 +492,19 @@ class MyAPI(FastAPI):
         @self.post(
             "/cable_temperature_simulation_list",
             tags=["Simulation"],
-            response_model=MultipleCableTemperatureSimulationResponse
+            response_model=MultipleCableTemperatureSimulationResponse,
+            responses={
+                400: {
+                    "description": "Erreur lors de la simulation de la température du câble.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Erreur lors de la simulation de la température du câble."
+                            }
+                        }
+                    }
+                }
+            }
         )
         def cable_temperature_simulation_list_api(
                 ambient_temperature: float = 25,
@@ -537,7 +561,19 @@ class MyAPI(FastAPI):
         @self.post(
             "/cable_temperature_consumption_simulation",
             tags=["Simulation"],
-            response_model=CableTemperatureConsumptionSimulationResponse
+            response_model=CableTemperatureConsumptionSimulationResponse,
+            responses={
+                400: {
+                    "description": "Erreur lors de la simulation de la température du câble.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Erreur lors de la simulation de la température du câble."
+                            }
+                        }
+                    }
+                }
+            }
         )
         def cable_temperature_consumption_simulation_api(
                 ambient_temperature: float = 25,
@@ -587,7 +623,19 @@ class MyAPI(FastAPI):
         @self.post(
             "/cable_temperature_consumption_simulation_list",
             tags=["Simulation"],
-            response_model=MultipleCableTemperatureConsumptionSimulationResponse
+            response_model=MultipleCableTemperatureConsumptionSimulationResponse,
+            responses={
+                400: {
+                    "description": "Erreur lors de la simulation de la température du câble.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Erreur lors de la simulation de la température du câble."
+                            }
+                        }
+                    }
+                }
+            }
         )
         def cable_temperature_consumption_simulation_list_api(
                 ambient_temperature: float = 25,
@@ -616,8 +664,8 @@ class MyAPI(FastAPI):
             - **duration_minutes** (_int_, optionnel) : Nombre de minutes à simuler (_défaut : 30_)
 
             **Retour :**
-            - Instance de `MultipleCableTemperatureConsumptionSimulationResponse` contenant les résultats de la
-              simulation.
+            - Instance de `MultipleCableTemperatureConsumptionSimulationResponse` contenant les
+              résultats de la simulation.
             """
             try:
                 res: MultipleCableTemperatureConsumptionSimulationResponse = (
@@ -640,7 +688,20 @@ class MyAPI(FastAPI):
         @self.get(
             "/global_consumption",
             tags=["Global Consumption"],
-            response_model=GlobalConsumptionResponse
+            response_model=GlobalConsumptionResponse,
+            responses={
+                400: {
+                    "description": "Erreur lors de la récupération de la consommation globale.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Erreur lors de la récupération de la consommation"
+                                          " globale."
+                            }
+                        }
+                    }
+                }
+            }
         )
         def global_consumption_api():
             """
@@ -658,7 +719,20 @@ class MyAPI(FastAPI):
         @self.post(
             "/reset_global_consumption",
             tags=["Global Consumption"],
-            response_model=GlobalConsumptionResponse
+            response_model=GlobalConsumptionResponse,
+            responses={
+                400: {
+                    "description": "Erreur lors de la réinitialisation de la consommation globale.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Erreur lors de la réinitialisation de la consommation"
+                                          " globale."
+                            }
+                        }
+                    }
+                }
+            }
         )
         def reset_global_consumption_api():
             """
