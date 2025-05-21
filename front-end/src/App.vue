@@ -9,7 +9,7 @@ import Loader from './components/Loader.vue';
 import Error from './components/Error.vue';
 
 // Importation des Fonctions
-import apiClient from './fonctions/api_client';
+import apiClient, {type MultipleCableTemperatureConsumptionSimulationResponse} from './fonctions/api_client';
 
 // Paramètres utilisateur
 const temperature_ambiante = ref<number>(25);
@@ -20,15 +20,32 @@ const duree_minutes = ref<number>(30);
 const simulation_duration_minutes = ref<number>(60);
 const time_step_microsecond = ref<number>(0.1);
 
+// Paramètres de simulation
+const parametres = ref<{
+  temperature_ambiante: number;
+  vitesse_vent: number;
+  intensite_courant: number;
+  temperature_cable_initiale: number;
+  duree_minutes: number;
+  simulation_duration_minutes: number;
+  time_step_microsecond: number;
+}>();
+
 const loading = ref(false);
-const result = ref<any>(null);
+const result = ref<MultipleCableTemperatureConsumptionSimulationResponse | null>(null);
 const error = ref<string | null>(null);
 
 // Graphique
+const x = ref<number[]>([0]);
+const y = ref<number[]>([0]);
 const graphData = ref<any[]>([]);
-const graphLayout = ref<any>({
+const graphLayout = ref<{
+  title: string;
+  xaxis: {title: string};
+  yaxis: {title: string};
+}>({
   title: "Évolution des températures finales",
-  xaxis: {title: "Index (minutes)"},
+  xaxis: {title: "Index (secondes)"},
   yaxis: {title: "Température (°C)"},
 });
 
@@ -39,6 +56,18 @@ const envoyerSimulation = async () => {
   graphData.value = [];
 
   try {
+    // récupération des valeurs des paramètres
+    parametres.value = {
+      temperature_ambiante: temperature_ambiante.value,
+      vitesse_vent: vitesse_vent.value,
+      intensite_courant: intensite_courant.value,
+      temperature_cable_initiale: temperature_cable_initiale.value,
+      duree_minutes: duree_minutes.value,
+      simulation_duration_minutes: simulation_duration_minutes.value,
+      time_step_microsecond: time_step_microsecond.value,
+    };
+
+    // Appel de l'API pour simuler la consommation de température du câble
     result.value = await apiClient.simulateCableTemperatureConsumptionList({
       ambient_temperature: temperature_ambiante.value,
       wind_speed: vitesse_vent.value,
@@ -49,28 +78,42 @@ const envoyerSimulation = async () => {
       duration_minutes: duree_minutes.value,
     });
 
-    const tableau = [temperature_cable_initiale.value, ...result.value.final_temperature_list];
+    // Création des tableaux x et y pour le graphique
+    x.value = [0, ...result.value.time_points_list];
+    y.value = [temperature_cable_initiale.value, ...result.value.final_temperature_list];
 
+    // Création des données pour le graphique
     graphData.value = [
       {
-        x: tableau.map((_: number, i: number) => i),
-        y: tableau,
+        x: x.value,
+        y: y.value,
         type: "scatter",
         mode: "lines+markers",
         name: "Températures finales",
         line: {color: "#0080ff"},
       },
       {
-        x: [0],
-        y: [tableau[0]],
+        x: [x.value[0]],
+        y: [y.value[0]],
         type: "scatter",
         mode: "markers",
         name: "Valeur initiale",
         marker: {color: "red", size: 10},
       },
+      {
+        x: [x.value[x.value.length - 1]],
+        y: [y.value[y.value.length - 1]],
+        type: "scatter",
+        mode: "markers",
+        name: "Valeur finale",
+        marker: {color: "green", size: 10},
+      },
     ];
 
-    graphLayout.value.yaxis.title = result.value.final_temperature_unit || "°C";
+    // Configuration du graphique
+    graphLayout.value.title = "Évolution des températures sur une période de temps";
+    graphLayout.value.xaxis.title = `Temps (${result.value.time_points_unit || "secondes"})`;
+    graphLayout.value.yaxis.title = `Température (${result.value.final_temperature_unit || "°C"})`;
   } catch (err: any) {
     error.value = err.message || "Erreur inconnue";
   } finally {
@@ -102,19 +145,38 @@ const envoyerSimulation = async () => {
       <h2>Résultats</h2>
 
       <div class="block">
-        <h3>🌡️ Températures finales ({{ result.final_temperature_unit }})</h3>
-        <p>{{ result.final_temperature_list.join(", ") }}</p>
+        <h3>📝 Paramètres de la simulation</h3>
+        <ul>
+<li>Température ambiante : {{ temperature_ambiante }} °C</li>
+<li>Vitesse du vent : {{ vitesse_vent }} m/s</li>
+<li>Intensité du courant : {{ intensite_courant }} A</li>
+<li>Température initiale du câble : {{ temperature_cable_initiale }} °C</li>
+<li>Nombre de minutes à simuler : {{ duree_minutes }} min</li>
+<li>Durée de simulation pour une valeur suivante : {{ simulation_duration_minutes }} s</li>
+<li>Pas de temps pour la simulation : {{ time_step_microsecond }} s</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h3>🌡️ Températures finales</h3>
+        <p>
+          {{ y[0] }} {{ result.final_temperature_unit }} - {{ y[y.length - 1] }} {{ result.final_temperature_unit}}
+        </p>
       </div>
 
       <div class="block">
         <h3>⚡ Énergie utilisée cumulée</h3>
-        <p>{{ result.cumulative_energy_used }} {{ result.energy_used_unit }}</p>
+        <p>
+          {{ result.cumulative_energy_used }}
+          {{ result.energy_used_unit }}
+        </p>
       </div>
 
       <div class="block">
         <h3>💨 Émissions CO₂ cumulées</h3>
         <p>
-          {{ result.cumulative_co2_emissions }} {{ result.co2_emissions_unit }}
+          {{ result.cumulative_co2_emissions }}
+          {{ result.co2_emissions_unit }}
         </p>
       </div>
 
