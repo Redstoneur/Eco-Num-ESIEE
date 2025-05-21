@@ -86,31 +86,31 @@ const envoyerSimulation = async () => {
 
     <form class="form-grid" @submit.prevent="envoyerSimulation">
       <div class="form-group">
-        <label>Température ambiante</label>
+        <label>Température ambiante (°C)</label>
         <input type="number" v-model="temperature_ambiante"/>
       </div>
       <div class="form-group">
-        <label>Vitesse du vent</label>
+        <label>Vitesse du vent (m/s)</label>
         <input type="number" v-model="vitesse_vent"/>
       </div>
       <div class="form-group">
-        <label>Intensité du courant</label>
+        <label>Intensité du courant (A)</label>
         <input type="number" v-model="intensite_courant"/>
       </div>
       <div class="form-group">
-        <label>Température initiale du câble</label>
+        <label>Température initiale du câble (°C)</label>
         <input type="number" v-model="temperature_cable_initiale"/>
       </div>
       <div class="form-group">
-        <label>Durée (minutes)</label>
+        <label>Nombre de minutes à simuler (minutes)</label>
         <input type="number" v-model="duree_minutes"/>
       </div>
       <div class="form-group">
-        <label>Pas de recherche (seconde)</label>
+        <label>Durée de la simulation pour une valeur suivante (s)</label>
         <input type="number" v-model="simulation_duration_minutes"/>
       </div>
       <div class="form-group">
-        <label>Pas de calcul (seconde)</label>
+        <label>Pas de temps pour la simulation (s)</label>
         <input type="number" v-model="time_step_microsecond"/>
       </div>
     </form>
