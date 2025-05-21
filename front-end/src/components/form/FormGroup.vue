@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
+import {defineProps, defineEmits} from "vue";
 
 defineProps<{
   label: string;
@@ -14,9 +14,9 @@ const emit = defineEmits(["update:modelValue"]);
   <div class="form-group">
     <label>{{ label }}</label>
     <input
-      :type="type || 'text'"
-      :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement)?.value)"
+        :type="type || 'text'"
+        :value="modelValue"
+        @input="$emit('update:modelValue', type === 'number' ? Number(($event.target as HTMLInputElement)?.value) : ($event.target as HTMLInputElement)?.value)"
     />
   </div>
 </template>

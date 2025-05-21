@@ -4,7 +4,7 @@ import {ref} from "vue";
 import {VuePlotly} from "vue3-plotly";
 
 // Importation des composants
-import FormGroup from "./components/form/form-group.vue";
+import Formulaire from "./components/form/Formulaire.vue";
 import Loader from './components/Loader.vue';
 import Error from './components/Error.vue';
 
@@ -17,8 +17,6 @@ const vitesse_vent = ref<number>(1);
 const intensite_courant = ref<number>(300);
 const temperature_cable_initiale = ref<number>(25);
 const duree_minutes = ref<number>(30);
-
-// Paramètres fixes
 const simulation_duration_minutes = ref<number>(60);
 const time_step_microsecond = ref<number>(0.1);
 
@@ -85,49 +83,17 @@ const envoyerSimulation = async () => {
   <div class="container">
     <h1>Simulation Température Câble</h1>
 
-    <form class="form-grid" @submit.prevent="envoyerSimulation">
-      <FormGroup
-        label="Température ambiante (°C)"
-        v-model="temperature_ambiante"
-        type="number"
-      />
-      <FormGroup
-        label="Vitesse du vent (m/s)"
-        v-model="vitesse_vent"
-        type="number"
-      />
-      <FormGroup
-        label="Intensité du courant (A)"
-        v-model="intensite_courant"
-        type="number"
-      />
-      <FormGroup
-        label="Température initiale du câble (°C)"
-        v-model="temperature_cable_initiale"
-        type="number"
-      />
-      <FormGroup
-        label="Nombre de minutes à simuler (min)"
-        v-model="duree_minutes"
-        type="number"
-      />
-      <FormGroup
-        label="Durée de la simulation pour une valeur suivante (s)"
-        v-model="simulation_duration_minutes"
-        type="number"
-      />
-      <FormGroup
-          label="Pas de temps pour la simulation (s)"
-          v-model="time_step_microsecond"
-          type="number"
-      />
-    </form>
-
-    <div class="actions">
-      <button type="submit" @click="envoyerSimulation" :disabled="loading">
-        Lancer la simulation
-      </button>
-    </div>
+    <Formulaire
+        v-model:temperature_ambiante="temperature_ambiante"
+        v-model:vitesse_vent="vitesse_vent"
+        v-model:intensite_courant="intensite_courant"
+        v-model:temperature_cable_initiale="temperature_cable_initiale"
+        v-model:duree_minutes="duree_minutes"
+        v-model:simulation_duration_minutes="simulation_duration_minutes"
+        v-model:time_step_microsecond="time_step_microsecond"
+        :loading="loading"
+        @submit="envoyerSimulation"
+    />
 
     <Loader v-if="loading"/>
     <Error v-if="error" :error="error"/>
@@ -191,34 +157,10 @@ h1 {
   gap: 1.5rem;
 }
 
-.actions {
-  text-align: center;
-  margin-top: 2rem;
-}
 
 .block-graphique h3 {
   text-align: center;
   margin-bottom: 10px;
-}
-
-button {
-  padding: 0.8rem 2rem;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #2980b9;
-}
-
-button:disabled {
-  background-color: #95a5a6;
-  cursor: not-allowed;
 }
 
 .result {
