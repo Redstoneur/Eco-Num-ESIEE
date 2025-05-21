@@ -101,11 +101,11 @@ const envoyerSimulation = async () => {
       </div>
       <div class="form-group">
         <label>Pas de recherche (seconde)</label>
-        <input type="number" :value="simulation_duration_minutes"/>
+        <input type="number"  v-model="simulation_duration_minutes"/>
       </div>
       <div class="form-group">
         <label>Pas de calcul (seconde)</label>
-        <input type="number" :value="time_step_microsecond"/>
+        <input type="number"  v-model="time_step_microsecond"/>
       </div>
     </form>
 
