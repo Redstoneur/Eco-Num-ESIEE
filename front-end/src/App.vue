@@ -151,13 +151,6 @@ h1 {
   font-size: 1.8rem;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-
 .block-graphique h3 {
   text-align: center;
   margin-bottom: 10px;
