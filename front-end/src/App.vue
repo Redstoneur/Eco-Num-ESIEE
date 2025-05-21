@@ -1,8 +1,14 @@
 <script setup lang="ts">
+// Importation des dépendances
 import {ref} from "vue";
 import {VuePlotly} from "vue3-plotly";
-import apiClient from './fonctions/api_client';
+
+// Importation des composants
 import Loader from './components/Loader.vue';
+import Error from './components/Error.vue';
+
+// Importation des Fonctions
+import apiClient from './fonctions/api_client';
 
 // Paramètres utilisateur
 const temperature_ambiante = ref<number>(25);
@@ -101,11 +107,11 @@ const envoyerSimulation = async () => {
       </div>
       <div class="form-group">
         <label>Pas de recherche (seconde)</label>
-        <input type="number"  v-model="simulation_duration_minutes"/>
+        <input type="number" v-model="simulation_duration_minutes"/>
       </div>
       <div class="form-group">
         <label>Pas de calcul (seconde)</label>
-        <input type="number"  v-model="time_step_microsecond"/>
+        <input type="number" v-model="time_step_microsecond"/>
       </div>
     </form>
 
@@ -116,7 +122,7 @@ const envoyerSimulation = async () => {
     </div>
 
     <Loader v-if="loading"/>
-    <div v-if="error" class="error">{{ error }}</div>
+    <Error v-if="error" :error="error"/>
 
     <div v-if="result" class="result">
       <h2>Résultats</h2>
@@ -245,13 +251,6 @@ button:disabled {
 h3 {
   color: #2c3e50;
   margin-bottom: 0.5rem;
-}
-
-.error {
-  margin-top: 1rem;
-  color: red;
-  font-weight: bold;
-  text-align: center;
 }
 
 @keyframes l16 {
