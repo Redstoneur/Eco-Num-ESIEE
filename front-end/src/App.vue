@@ -171,10 +171,4 @@ h3 {
   color: #2c3e50;
   margin-bottom: 0.5rem;
 }
-
-@keyframes l16 {
-  100% {
-    transform: rotate(1turn);
-  }
-}
 </style>
