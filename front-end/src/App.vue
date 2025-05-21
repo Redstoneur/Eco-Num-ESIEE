@@ -4,6 +4,7 @@ import {ref} from "vue";
 import {VuePlotly} from "vue3-plotly";
 
 // Importation des composants
+import FormGroup from "./components/form/form-group.vue";
 import Loader from './components/Loader.vue';
 import Error from './components/Error.vue';
 
@@ -85,34 +86,41 @@ const envoyerSimulation = async () => {
     <h1>Simulation Température Câble</h1>
 
     <form class="form-grid" @submit.prevent="envoyerSimulation">
-      <div class="form-group">
-        <label>Température ambiante (°C)</label>
-        <input type="number" v-model="temperature_ambiante"/>
-      </div>
-      <div class="form-group">
-        <label>Vitesse du vent (m/s)</label>
-        <input type="number" v-model="vitesse_vent"/>
-      </div>
-      <div class="form-group">
-        <label>Intensité du courant (A)</label>
-        <input type="number" v-model="intensite_courant"/>
-      </div>
-      <div class="form-group">
-        <label>Température initiale du câble (°C)</label>
-        <input type="number" v-model="temperature_cable_initiale"/>
-      </div>
-      <div class="form-group">
-        <label>Nombre de minutes à simuler (minutes)</label>
-        <input type="number" v-model="duree_minutes"/>
-      </div>
-      <div class="form-group">
-        <label>Durée de la simulation pour une valeur suivante (s)</label>
-        <input type="number" v-model="simulation_duration_minutes"/>
-      </div>
-      <div class="form-group">
-        <label>Pas de temps pour la simulation (s)</label>
-        <input type="number" v-model="time_step_microsecond"/>
-      </div>
+      <FormGroup
+        label="Température ambiante (°C)"
+        v-model="temperature_ambiante"
+        type="number"
+      />
+      <FormGroup
+        label="Vitesse du vent (m/s)"
+        v-model="vitesse_vent"
+        type="number"
+      />
+      <FormGroup
+        label="Intensité du courant (A)"
+        v-model="intensite_courant"
+        type="number"
+      />
+      <FormGroup
+        label="Température initiale du câble (°C)"
+        v-model="temperature_cable_initiale"
+        type="number"
+      />
+      <FormGroup
+        label="Nombre de minutes à simuler (min)"
+        v-model="duree_minutes"
+        type="number"
+      />
+      <FormGroup
+        label="Durée de la simulation pour une valeur suivante (s)"
+        v-model="simulation_duration_minutes"
+        type="number"
+      />
+      <FormGroup
+          label="Pas de temps pour la simulation (s)"
+          v-model="time_step_microsecond"
+          type="number"
+      />
     </form>
 
     <div class="actions">
@@ -181,30 +189,6 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-label {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #34495e;
-}
-
-input {
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-input:focus {
-  border-color: #3498db;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
 .actions {
