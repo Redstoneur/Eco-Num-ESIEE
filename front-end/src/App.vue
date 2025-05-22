@@ -1,8 +1,46 @@
 <script setup lang="ts">
+// Importation des dépendances
 import {ref} from "vue";
 import {VuePlotly} from "vue3-plotly";
-import apiClient from './fonctions/api_client';
+import type {Data, Layout} from "plotly.js";
+
+// Importation des composants
+import Tile from "./components/Tile.vue";
+import ProjectInfo from './components/ProjectInfo.vue';
+import EnergyConsumptionDisplay from "./components/energy/EnergyConsumptionDisplay.vue";
+import Formulaire from "./components/form/Formulaire.vue";
 import Loader from './components/Loader.vue';
+import Error from './components/Error.vue';
+
+// Importation des Fonctions
+import apiClient, {
+  type GlobalConsumptionResponse,
+  type MultipleCableTemperatureConsumptionSimulationResponse
+} from './fonctions/api_client';
+
+
+// Propriétés du projet
+const projectTitle = "Description du projet";
+const projectDescription = "Ce projet est une application web interactive permettant de simuler la température d'un câble électrique en fonction de divers paramètres environnementaux et électriques. Il offre également des informations sur la consommation énergétique et les émissions de CO₂ associées aux simulations.";
+const projectTitleUsage = "Comment utiliser l'application";
+const usageSteps = [
+  {
+    title: "Paramètres de simulation",
+    content: "Remplissez les champs du formulaire avec les valeurs souhaitées : Température ambiante, Vitesse du vent, etc.",
+  },
+  {
+    title: "Lancer la simulation",
+    content: "Cliquez sur le bouton **\"Lancer la simulation\"** pour démarrer la simulation.",
+  },
+  {
+    title: "Résultats",
+    content: "Une fois la simulation terminée, vous verrez les résultats et un graphique.",
+  },
+  {
+    title: "Consommation globale",
+    content: "La consommation énergétique et les émissions de CO₂ de toutes les simulations effectuées sont affichées en haut de la page.",
+  },
+];
 
 // Paramètres utilisateur
 const temperature_ambiante = ref<number>(25);
@@ -10,22 +48,66 @@ const vitesse_vent = ref<number>(1);
 const intensite_courant = ref<number>(300);
 const temperature_cable_initiale = ref<number>(25);
 const duree_minutes = ref<number>(30);
-
-// Paramètres fixes
 const simulation_duration_minutes = ref<number>(60);
 const time_step_microsecond = ref<number>(0.1);
 
+// Paramètres de simulation
+const parametres = ref<{
+  temperature_ambiante: number;
+  vitesse_vent: number;
+  intensite_courant: number;
+  temperature_cable_initiale: number;
+  duree_minutes: number;
+  simulation_duration_minutes: number;
+  time_step_microsecond: number;
+}>();
+
+// consommation globale des simulations sur toute la durée de fonctionnement des API
+const global_consumption = ref<GlobalConsumptionResponse>(
+    {
+      energy_used: 0,
+      energy_used_list: [],
+      energy_used_unit: "kWh",
+      co2_emissions: 0,
+      co2_emissions_list: [],
+      co2_emissions_unit: "kgCO2",
+    }
+);
+
 const loading = ref(false);
-const result = ref<any>(null);
+const result = ref<MultipleCableTemperatureConsumptionSimulationResponse | null>(null);
 const error = ref<string | null>(null);
 
 // Graphique
-const graphData = ref<any[]>([]);
-const graphLayout = ref<any>({
-  title: "Évolution des températures finales",
-  xaxis: {title: "Index (minutes)"},
-  yaxis: {title: "Température (°C)"},
+const x = ref<number[]>([0]);
+const y = ref<number[]>([0]);
+const graphData = ref<Partial<Data>[]>([]);
+const graphLayout = ref<Partial<Layout>>({
+  title: {
+    text: "Évolution des températures sur une période de temps",
+    font: {size: 16},
+  },
+  xaxis: {
+    title: {
+      text: "Temps (secondes)",
+      font: {size: 14},
+    },
+  },
+  yaxis: {
+    title: {
+      text: "Température (°C)",
+      font: {size: 14},
+    },
+  },
 });
+
+const getGlobalConsumption = async () => {
+  try {
+    global_consumption.value = await apiClient.getGlobalConsumption();
+  } catch (err: any) {
+    error.value = err.message || "Erreur inconnue";
+  }
+};
 
 const envoyerSimulation = async () => {
   loading.value = true;
@@ -34,6 +116,18 @@ const envoyerSimulation = async () => {
   graphData.value = [];
 
   try {
+    // récupération des valeurs des paramètres
+    parametres.value = {
+      temperature_ambiante: temperature_ambiante.value,
+      vitesse_vent: vitesse_vent.value,
+      intensite_courant: intensite_courant.value,
+      temperature_cable_initiale: temperature_cable_initiale.value,
+      duree_minutes: duree_minutes.value,
+      simulation_duration_minutes: simulation_duration_minutes.value,
+      time_step_microsecond: time_step_microsecond.value,
+    };
+
+    // Appel de l'API pour simuler la consommation de température du câble
     result.value = await apiClient.simulateCableTemperatureConsumptionList({
       ambient_temperature: temperature_ambiante.value,
       wind_speed: vitesse_vent.value,
@@ -44,97 +138,136 @@ const envoyerSimulation = async () => {
       duration_minutes: duree_minutes.value,
     });
 
-    const tableau = [temperature_cable_initiale.value, ...result.value.final_temperature_list];
+    // Création des tableaux x et y pour le graphique
+    x.value = [0, ...result.value.time_points_list];
+    y.value = [temperature_cable_initiale.value, ...result.value.final_temperature_list];
 
+    // Création des données pour le graphique
     graphData.value = [
       {
-        x: tableau.map((_: number, i: number) => i),
-        y: tableau,
+        x: x.value,
+        y: y.value,
         type: "scatter",
         mode: "lines+markers",
         name: "Températures finales",
         line: {color: "#0080ff"},
       },
       {
-        x: [0],
-        y: [tableau[0]],
+        x: [x.value[0]],
+        y: [y.value[0]],
         type: "scatter",
         mode: "markers",
         name: "Valeur initiale",
         marker: {color: "red", size: 10},
       },
+      {
+        x: [x.value[x.value.length - 1]],
+        y: [y.value[y.value.length - 1]],
+        type: "scatter",
+        mode: "markers",
+        name: "Valeur finale",
+        marker: {color: "green", size: 10},
+      },
     ];
 
-    graphLayout.value.yaxis.title = result.value.final_temperature_unit || "°C";
+    // Configuration du graphique
+    graphLayout.value.title = {
+      text: "Évolution des températures sur une période de temps"
+    };
+    if (graphLayout.value.xaxis) {
+      graphLayout.value.xaxis.title = {
+        text: `Temps (${result.value?.time_points_unit || "secondes"})`
+      };
+    }
+    if (graphLayout.value.yaxis) {
+      graphLayout.value.yaxis.title = {
+        text: `Température (${result.value?.final_temperature_unit || "°C"})`
+      };
+    }
+
+    await getGlobalConsumption();
   } catch (err: any) {
     error.value = err.message || "Erreur inconnue";
   } finally {
     loading.value = false;
   }
 };
+
+// actualisation de la consommation globale au chargement de la page
+getGlobalConsumption();
+
 </script>
 
 <template>
   <div class="container">
-    <h1>Simulation Température Câble</h1>
+    <Tile title="Simulation Température Câble"/>
 
-    <form class="form-grid" @submit.prevent="envoyerSimulation">
-      <div class="form-group">
-        <label>Température ambiante</label>
-        <input type="number" v-model="temperature_ambiante"/>
-      </div>
-      <div class="form-group">
-        <label>Vitesse du vent</label>
-        <input type="number" v-model="vitesse_vent"/>
-      </div>
-      <div class="form-group">
-        <label>Intensité du courant</label>
-        <input type="number" v-model="intensite_courant"/>
-      </div>
-      <div class="form-group">
-        <label>Température initiale du câble</label>
-        <input type="number" v-model="temperature_cable_initiale"/>
-      </div>
-      <div class="form-group">
-        <label>Durée (minutes)</label>
-        <input type="number" v-model="duree_minutes"/>
-      </div>
-      <div class="form-group">
-        <label>Pas de recherche (seconde)</label>
-        <input type="number"  v-model="simulation_duration_minutes"/>
-      </div>
-      <div class="form-group">
-        <label>Pas de calcul (seconde)</label>
-        <input type="number"  v-model="time_step_microsecond"/>
-      </div>
-    </form>
+    <EnergyConsumptionDisplay
+        title="Consommation pour toute les simulations"
+        :energyUsed="global_consumption.energy_used"
+        :energyUsedUnit="global_consumption.energy_used_unit"
+        :co2Emissions="global_consumption.co2_emissions"
+        :co2EmissionsUnit="global_consumption.co2_emissions_unit"
+    />
 
-    <div class="actions">
-      <button type="submit" @click="envoyerSimulation" :disabled="loading">
-        Lancer la simulation
-      </button>
-    </div>
+    <ProjectInfo
+        :title="projectTitle"
+        :description="projectDescription"
+        :titleUsage="projectTitleUsage"
+        :usageSteps="usageSteps"
+    />
+
+    <Formulaire
+        v-model:temperature_ambiante="temperature_ambiante"
+        v-model:vitesse_vent="vitesse_vent"
+        v-model:intensite_courant="intensite_courant"
+        v-model:temperature_cable_initiale="temperature_cable_initiale"
+        v-model:duree_minutes="duree_minutes"
+        v-model:simulation_duration_minutes="simulation_duration_minutes"
+        v-model:time_step_microsecond="time_step_microsecond"
+        :loading="loading"
+        @submit="envoyerSimulation"
+    />
 
     <Loader v-if="loading"/>
-    <div v-if="error" class="error">{{ error }}</div>
+    <Error v-if="error" :error="error"/>
 
     <div v-if="result" class="result">
       <h2>Résultats</h2>
 
       <div class="block">
-        <h3>🌡️ Températures finales ({{ result.final_temperature_unit }})</h3>
-        <p>{{ result.final_temperature_list.join(", ") }}</p>
+        <h3>📝 Paramètres de la simulation</h3>
+        <ul>
+          <li>Température ambiante : {{ temperature_ambiante }} °C</li>
+          <li>Vitesse du vent : {{ vitesse_vent }} m/s</li>
+          <li>Intensité du courant : {{ intensite_courant }} A</li>
+          <li>Température initiale du câble : {{ temperature_cable_initiale }} °C</li>
+          <li>Nombre de minutes à simuler : {{ duree_minutes }} min</li>
+          <li>Durée de simulation pour une valeur suivante : {{ simulation_duration_minutes }} s</li>
+          <li>Pas de temps pour la simulation : {{ time_step_microsecond }} s</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h3>🌡️ Températures finales</h3>
+        <p>
+          {{ y[0] }} {{ result.final_temperature_unit }} - {{ y[y.length - 1] }} {{ result.final_temperature_unit }}
+        </p>
       </div>
 
       <div class="block">
         <h3>⚡ Énergie utilisée cumulée</h3>
-        <p>{{ result.cumulative_energy_used }} {{ result.energy_used_unit }}</p>
+        <p>
+          {{ result.cumulative_energy_used }}
+          {{ result.energy_used_unit }}
+        </p>
       </div>
 
       <div class="block">
         <h3>💨 Émissions CO₂ cumulées</h3>
         <p>
-          {{ result.cumulative_co2_emissions }} {{ result.co2_emissions_unit }}
+          {{ result.cumulative_co2_emissions }}
+          {{ result.co2_emissions_unit }}
         </p>
       </div>
 
@@ -164,71 +297,9 @@ const envoyerSimulation = async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #2c3e50;
-  font-size: 1.8rem;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-label {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #34495e;
-}
-
-input {
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-input:focus {
-  border-color: #3498db;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-}
-
-.actions {
-  text-align: center;
-  margin-top: 2rem;
-}
-
 .block-graphique h3 {
   text-align: center;
   margin-bottom: 10px;
-}
-
-button {
-  padding: 0.8rem 2rem;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #2980b9;
-}
-
-button:disabled {
-  background-color: #95a5a6;
-  cursor: not-allowed;
 }
 
 .result {
@@ -245,18 +316,5 @@ button:disabled {
 h3 {
   color: #2c3e50;
   margin-bottom: 0.5rem;
-}
-
-.error {
-  margin-top: 1rem;
-  color: red;
-  font-weight: bold;
-  text-align: center;
-}
-
-@keyframes l16 {
-  100% {
-    transform: rotate(1turn);
-  }
 }
 </style>

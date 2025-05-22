@@ -77,6 +77,8 @@ class MultipleCableTemperatureSimulationResponse(BaseModel):
     """
     final_temperature_list: List[float]
     final_temperature_unit: str = TEMPERATURE_UNIT
+    time_points_list: List[float]
+    time_points_unit: str = TIME_UNIT
     execution_time: List[float]
     cumulative_execution_time: float
     execution_time_unit: str = TIME_UNIT
@@ -88,6 +90,8 @@ class MultipleCableTemperatureConsumptionSimulationResponse(BaseModel):
     """
     final_temperature_list: List[float]
     final_temperature_unit: str = TEMPERATURE_UNIT
+    time_points_list: List[float]
+    time_points_unit: str = TIME_UNIT
     energy_used_list: List[float]
     cumulative_energy_used: float
     energy_used_unit: str = ENERGY_USED_UNIT
@@ -179,51 +183,6 @@ def simulate_cable_temperature(
     )
 
 
-def simulate_cable_temperature_over_x_minutes(
-        duration_minutes: int = 30,
-        simulation_duration_minutes: int = 60,
-        time_step_microsecond: float = 1e-6,
-        ambient_temperature: float = 25,
-        wind_speed: float = 1,
-        current_intensity: float = 300,
-        cable_temperature_initial: float = 25
-) -> MultipleCableTemperatureSimulationResponse:
-    """
-    Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
-    :param duration_minutes: Nombre de minutes à simuler (par défaut 30).
-    :param simulation_duration_minutes: Durée de la simulation pour une valeur suivante (s)
-    :param time_step_microsecond: Pas de temps pour la simulation (s)
-    :param ambient_temperature: Température ambiante (°C)
-    :param wind_speed: Vitesse du vent (m/s)
-    :param current_intensity: Intensité (A)
-    :param cable_temperature_initial: Température initiale du câble
-    :return: Liste des températures, énergies et émissions de CO2 pour chaque minute.
-    """
-
-    final_temperature_list: List[float] = []
-    execution_time: List[float] = []
-
-    current_cable_temperature: float = cable_temperature_initial
-
-    minutes_seconds = duration_minutes * 60
-    for tmp in range(0, minutes_seconds, simulation_duration_minutes):
-        res: CableTemperatureSimulationResponse = simulate_cable_temperature(
-            ambient_temperature, wind_speed, current_intensity, current_cable_temperature,
-            simulation_duration_seconds=simulation_duration_minutes,
-            time_step_microsecond=time_step_microsecond
-        )
-
-        final_temperature_list.append(res.final_temperature)
-        execution_time.append(res.execution_time)
-        current_cable_temperature = res.final_temperature
-
-    return MultipleCableTemperatureSimulationResponse(
-        final_temperature_list=final_temperature_list,
-        execution_time=execution_time,
-        cumulative_execution_time=sum(execution_time)
-    )
-
-
 def simulate_cable_temperature_with_consumption(
         ambient_temperature: float,
         wind_speed: float,
@@ -293,6 +252,7 @@ def simulate_cable_temperature_over_x_minutes_with_consumption(
     """
 
     final_temperature_list: List[float] = []
+    time_points_list: List[float] = []
     energy_used_list: List[float] = []
     co2_emissions_list: List[float] = []
     execution_time: List[float] = []
@@ -308,6 +268,7 @@ def simulate_cable_temperature_over_x_minutes_with_consumption(
         )
 
         final_temperature_list.append(res.final_temperature)
+        time_points_list.append(tmp + simulation_duration_minutes)
         energy_used_list.append(res.energy_used)
         co2_emissions_list.append(res.co2_emissions)
         execution_time.append(res.execution_time)
@@ -315,6 +276,7 @@ def simulate_cable_temperature_over_x_minutes_with_consumption(
 
     return MultipleCableTemperatureConsumptionSimulationResponse(
         final_temperature_list=final_temperature_list,
+        time_points_list=time_points_list,
         energy_used_list=energy_used_list,
         cumulative_energy_used=sum(energy_used_list),
         co2_emissions_list=co2_emissions_list,
@@ -551,6 +513,7 @@ class MyAPI(FastAPI):
                 update_global_consumption_list(res)
                 return MultipleCableTemperatureSimulationResponse(
                     final_temperature_list=res.final_temperature_list,
+                    time_points_list=res.time_points_list,
                     execution_time=res.execution_time,
                     cumulative_execution_time=res.cumulative_execution_time
                 )

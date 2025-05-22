@@ -1,5 +1,5 @@
-import axios from 'axios';
 import type {AxiosInstance} from 'axios';
+import axios from 'axios';
 
 const apiClient: AxiosInstance = axios.create({
     baseURL: 'http://localhost:8000', // Remplacez par l'URL de votre serveur FastAPI
@@ -27,6 +27,8 @@ export interface CableTemperatureSimulationResponse {
 export interface MultipleCableTemperatureSimulationResponse {
     final_temperature_list: number[];
     final_temperature_unit: string;
+    time_points_list: number[];
+    time_points_unit: string;
     execution_time: number[];
     cumulative_execution_time: number;
     execution_time_unit: string;
@@ -46,6 +48,8 @@ export interface CableTemperatureConsumptionSimulationResponse {
 export interface MultipleCableTemperatureConsumptionSimulationResponse {
     final_temperature_list: number[];
     final_temperature_unit: string;
+    time_points_list: number[];
+    time_points_unit: string;
     energy_used_list: number[];
     cumulative_energy_used: number;
     energy_used_unit: string;
@@ -191,6 +195,7 @@ export default {
         const response = await apiClient.post(
             url
         );
+
         return response.data;
     },
 
