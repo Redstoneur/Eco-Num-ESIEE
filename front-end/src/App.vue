@@ -2,6 +2,7 @@
 // Importation des dépendances
 import {ref} from "vue";
 import {VuePlotly} from "vue3-plotly";
+import type {Data, Layout} from "plotly.js";
 
 // Importation des composants
 import Formulaire from "./components/form/Formulaire.vue";
@@ -38,15 +39,24 @@ const error = ref<string | null>(null);
 // Graphique
 const x = ref<number[]>([0]);
 const y = ref<number[]>([0]);
-const graphData = ref<any[]>([]);
-const graphLayout = ref<{
-  title: string;
-  xaxis: {title: string};
-  yaxis: {title: string};
-}>({
-  title: "Évolution des températures finales",
-  xaxis: {title: "Index (secondes)"},
-  yaxis: {title: "Température (°C)"},
+const graphData = ref<Partial<Data>[]>([]);
+const graphLayout = ref<Partial<Layout>>({
+  title: {
+    text: "Évolution des températures sur une période de temps",
+    font: {size: 16},
+  },
+  xaxis: {
+    title: {
+      text: "Temps (secondes)",
+      font: {size: 14},
+    },
+  },
+  yaxis: {
+    title: {
+      text: "Température (°C)",
+      font: {size: 14},
+    },
+  },
 });
 
 const envoyerSimulation = async () => {
@@ -111,9 +121,19 @@ const envoyerSimulation = async () => {
     ];
 
     // Configuration du graphique
-    graphLayout.value.title = "Évolution des températures sur une période de temps";
-    graphLayout.value.xaxis.title = `Temps (${result.value.time_points_unit || "secondes"})`;
-    graphLayout.value.yaxis.title = `Température (${result.value.final_temperature_unit || "°C"})`;
+    graphLayout.value.title = {
+      text: "Évolution des températures sur une période de temps"
+    };
+    if (graphLayout.value.xaxis) {
+      graphLayout.value.xaxis.title = {
+        text: `Temps (${result.value?.time_points_unit || "secondes"})`
+      };
+    }
+    if (graphLayout.value.yaxis) {
+      graphLayout.value.yaxis.title = {
+        text: `Température (${result.value?.final_temperature_unit || "°C"})`
+      };
+    }
   } catch (err: any) {
     error.value = err.message || "Erreur inconnue";
   } finally {
@@ -147,20 +167,20 @@ const envoyerSimulation = async () => {
       <div class="block">
         <h3>📝 Paramètres de la simulation</h3>
         <ul>
-<li>Température ambiante : {{ temperature_ambiante }} °C</li>
-<li>Vitesse du vent : {{ vitesse_vent }} m/s</li>
-<li>Intensité du courant : {{ intensite_courant }} A</li>
-<li>Température initiale du câble : {{ temperature_cable_initiale }} °C</li>
-<li>Nombre de minutes à simuler : {{ duree_minutes }} min</li>
-<li>Durée de simulation pour une valeur suivante : {{ simulation_duration_minutes }} s</li>
-<li>Pas de temps pour la simulation : {{ time_step_microsecond }} s</li>
+          <li>Température ambiante : {{ temperature_ambiante }} °C</li>
+          <li>Vitesse du vent : {{ vitesse_vent }} m/s</li>
+          <li>Intensité du courant : {{ intensite_courant }} A</li>
+          <li>Température initiale du câble : {{ temperature_cable_initiale }} °C</li>
+          <li>Nombre de minutes à simuler : {{ duree_minutes }} min</li>
+          <li>Durée de simulation pour une valeur suivante : {{ simulation_duration_minutes }} s</li>
+          <li>Pas de temps pour la simulation : {{ time_step_microsecond }} s</li>
         </ul>
       </div>
 
       <div class="block">
         <h3>🌡️ Températures finales</h3>
         <p>
-          {{ y[0] }} {{ result.final_temperature_unit }} - {{ y[y.length - 1] }} {{ result.final_temperature_unit}}
+          {{ y[0] }} {{ result.final_temperature_unit }} - {{ y[y.length - 1] }} {{ result.final_temperature_unit }}
         </p>
       </div>
 
