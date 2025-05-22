@@ -5,8 +5,10 @@ import {VuePlotly} from "vue3-plotly";
 import type {Data, Layout} from "plotly.js";
 
 // Importation des composants
-import Formulaire from "./components/form/Formulaire.vue";
+import Tile from "./components/Tile.vue";
+import ProjectInfo from './components/ProjectInfo.vue';
 import EnergyConsumptionDisplay from "./components/energy/EnergyConsumptionDisplay.vue";
+import Formulaire from "./components/form/Formulaire.vue";
 import Loader from './components/Loader.vue';
 import Error from './components/Error.vue';
 
@@ -16,6 +18,29 @@ import apiClient, {
   type MultipleCableTemperatureConsumptionSimulationResponse
 } from './fonctions/api_client';
 
+
+// Propriétés du projet
+const projectTitle = "Description du projet";
+const projectDescription = "Ce projet est une application web interactive permettant de simuler la température d'un câble électrique en fonction de divers paramètres environnementaux et électriques. Il offre également des informations sur la consommation énergétique et les émissions de CO₂ associées aux simulations.";
+const projectTitleUsage = "Comment utiliser l'application";
+const usageSteps = [
+  {
+    title: "Paramètres de simulation",
+    content: "Remplissez les champs du formulaire avec les valeurs souhaitées : Température ambiante, Vitesse du vent, etc.",
+  },
+  {
+    title: "Lancer la simulation",
+    content: "Cliquez sur le bouton **\"Lancer la simulation\"** pour démarrer la simulation.",
+  },
+  {
+    title: "Résultats",
+    content: "Une fois la simulation terminée, vous verrez les résultats et un graphique.",
+  },
+  {
+    title: "Consommation globale",
+    content: "La consommation énergétique et les émissions de CO₂ de toutes les simulations effectuées sont affichées en haut de la page.",
+  },
+];
 
 // Paramètres utilisateur
 const temperature_ambiante = ref<number>(25);
@@ -175,7 +200,7 @@ getGlobalConsumption();
 
 <template>
   <div class="container">
-    <h1>Simulation Température Câble</h1>
+    <Tile title="Simulation Température Câble"/>
 
     <EnergyConsumptionDisplay
         title="Consommation pour toute les simulations"
@@ -185,6 +210,12 @@ getGlobalConsumption();
         :co2EmissionsUnit="global_consumption.co2_emissions_unit"
     />
 
+    <ProjectInfo
+        :title="projectTitle"
+        :description="projectDescription"
+        :titleUsage="projectTitleUsage"
+        :usageSteps="usageSteps"
+    />
 
     <Formulaire
         v-model:temperature_ambiante="temperature_ambiante"
@@ -264,13 +295,6 @@ getGlobalConsumption();
   background: #f9fafb;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #2c3e50;
-  font-size: 1.8rem;
 }
 
 .block-graphique h3 {

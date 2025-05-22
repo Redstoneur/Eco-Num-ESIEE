@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {defineProps, defineEmits} from "vue";
+import FormTitle from "./FormTitle.vue";
 import FormGroup from "./FormGroup.vue";
 import FormSubmitButton from "./FormSubmitButton.vue";
 
@@ -14,7 +15,7 @@ defineProps<{
   loading: boolean;
 }>();
 
-const emit = defineEmits([
+defineEmits([
   "submit",
   "update:temperature_ambiante",
   "update:vitesse_vent",
@@ -28,6 +29,7 @@ const emit = defineEmits([
 
 <template>
   <form class="form-grid" @submit.prevent="$emit('submit')">
+    <FormTitle title="Paramètres de la simulation" />
     <FormGroup
         label="Température ambiante (°C)"
         :modelValue="temperature_ambiante"
@@ -79,6 +81,9 @@ const emit = defineEmits([
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1.5rem;
 }
 
 @media (max-width: 768px) {
