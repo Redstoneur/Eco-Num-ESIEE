@@ -25,6 +25,9 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt \
     && apk del gcc musl-dev g++ libffi-dev
 
+# Installer curl pour les tests de santé
+RUN apk add --no-cache curl
+
 # Copier le reste du code de l'application dans le conteneur
 COPY . .
 

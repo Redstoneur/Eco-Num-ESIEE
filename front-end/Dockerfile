@@ -16,6 +16,9 @@ COPY package*.json ./
 # Installez les dépendances
 RUN npm install && npm cache clean --force
 
+# Installer curl pour les tests de santé
+RUN apk add --no-cache curl
+
 # Copiez le reste de l'application dans le conteneur
 COPY . .
 
