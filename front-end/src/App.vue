@@ -6,11 +6,16 @@ import type {Data, Layout} from "plotly.js";
 
 // Importation des composants
 import Formulaire from "./components/form/Formulaire.vue";
+import EnergyConsumptionDisplay from "./components/energy/EnergyConsumptionDisplay.vue";
 import Loader from './components/Loader.vue';
 import Error from './components/Error.vue';
 
 // Importation des Fonctions
-import apiClient, {type MultipleCableTemperatureConsumptionSimulationResponse} from './fonctions/api_client';
+import apiClient, {
+  type GlobalConsumptionResponse,
+  type MultipleCableTemperatureConsumptionSimulationResponse
+} from './fonctions/api_client';
+
 
 // Paramètres utilisateur
 const temperature_ambiante = ref<number>(25);
@@ -31,6 +36,18 @@ const parametres = ref<{
   simulation_duration_minutes: number;
   time_step_microsecond: number;
 }>();
+
+// consommation globale des simulations sur toute la durée de fonctionnement des API
+const global_consumption = ref<GlobalConsumptionResponse>(
+    {
+      energy_used: 0,
+      energy_used_list: [],
+      energy_used_unit: "kWh",
+      co2_emissions: 0,
+      co2_emissions_list: [],
+      co2_emissions_unit: "kgCO2",
+    }
+);
 
 const loading = ref(false);
 const result = ref<MultipleCableTemperatureConsumptionSimulationResponse | null>(null);
@@ -58,6 +75,14 @@ const graphLayout = ref<Partial<Layout>>({
     },
   },
 });
+
+const getGlobalConsumption = async () => {
+  try {
+    global_consumption.value = await apiClient.getGlobalConsumption();
+  } catch (err: any) {
+    error.value = err.message || "Erreur inconnue";
+  }
+};
 
 const envoyerSimulation = async () => {
   loading.value = true;
@@ -134,17 +159,32 @@ const envoyerSimulation = async () => {
         text: `Température (${result.value?.final_temperature_unit || "°C"})`
       };
     }
+
+    await getGlobalConsumption();
   } catch (err: any) {
     error.value = err.message || "Erreur inconnue";
   } finally {
     loading.value = false;
   }
 };
+
+// actualisation de la consommation globale au chargement de la page
+getGlobalConsumption();
+
 </script>
 
 <template>
   <div class="container">
     <h1>Simulation Température Câble</h1>
+
+    <EnergyConsumptionDisplay
+        title="Consommation pour toute les simulations"
+        :energyUsed="global_consumption.energy_used"
+        :energyUsedUnit="global_consumption.energy_used_unit"
+        :co2Emissions="global_consumption.co2_emissions"
+        :co2EmissionsUnit="global_consumption.co2_emissions_unit"
+    />
+
 
     <Formulaire
         v-model:temperature_ambiante="temperature_ambiante"
