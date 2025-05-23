@@ -60,4 +60,37 @@ defineProps<{
   font-weight: bold;
   color: #2c3e50;
 }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .project-info {
+    padding: 0.75rem;
+  }
+  .project-title {
+    font-size: 1.3rem;
+  }
+  .project-description {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+  .usage-steps li {
+    margin-bottom: 0.7rem;
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 450px) {
+  .project-info {
+    padding: 0.4rem;
+  }
+  .project-title {
+    font-size: 1.05rem;
+  }
+  .project-description {
+    font-size: 0.9rem;
+  }
+  .usage-steps li {
+    font-size: 0.93rem;
+  }
+}
 </style>
