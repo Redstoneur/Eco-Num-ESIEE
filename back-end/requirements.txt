@@ -1,8 +1,8 @@
 fastapi
 uvicorn
-datetime
 psutil
 codecarbon
 numpy
 scipy
 pydantic
+redis

@@ -29,7 +29,7 @@ RUN pip install --upgrade pip \
 RUN apk add --no-cache curl
 
 # Copier le reste du code de l'application dans le conteneur
-COPY . .
+COPY src/ .
 
 # Changer les permissions du dossier de travail
 RUN chown -R appuser:appgroup /app
