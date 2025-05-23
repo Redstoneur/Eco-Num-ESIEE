@@ -5,8 +5,8 @@ import type {Data, Layout} from "plotly.js";
 
 // Importation des composants
 import Tile from "./components/Tile.vue";
-import ProjectInfo from './components/ProjectInfo.vue';
 import EnergyConsumptionDisplay from "./components/energy/EnergyConsumptionDisplay.vue";
+import ProjectInfo from './components/ProjectInfo.vue';
 import Formulaire from "./components/form/Formulaire.vue";
 import Result from "./components/Result.vue";
 import Loader from './components/Loader.vue';
@@ -222,13 +222,22 @@ getGlobalConsumption();
     />
 
     <Formulaire
+        title="Paramètres de la simulation"
+        temperature_ambiante_label="Température ambiante (°C)"
         v-model:temperature_ambiante="temperature_ambiante"
+        vitesse_vent_label="Vitesse du vent (m/s)"
         v-model:vitesse_vent="vitesse_vent"
+        intensite_courant_label="Intensité du courant (A)"
         v-model:intensite_courant="intensite_courant"
+        temperature_cable_initiale_label="Température initiale du câble (°C)"
         v-model:temperature_cable_initiale="temperature_cable_initiale"
+        duree_minutes_label="Nombre de minutes à simuler (min)"
         v-model:duree_minutes="duree_minutes"
+        simulation_duration_minutes_label="Durée de la simulation (min)"
         v-model:simulation_duration_minutes="simulation_duration_minutes"
-        v-model:time_step_microsecond="time_step_microsecond"
+        time_step_label="Durée de la simulation pour une valeur suivante (s)"
+        v-model:time_step="time_step_microsecond"
+        buttonLabel="Lancer la simulation"
         :loading="loading"
         @submit="envoyerSimulation"
     />
