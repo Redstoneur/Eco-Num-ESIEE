@@ -9,10 +9,12 @@ class DefaultValues(BaseModel):
 
     Attributs :
         energy_used (float): Valeur par défaut de la consommation d'énergie.
-        energy_used_list (list[float]): Liste vide par défaut pour l'historique de consommation d'énergie.
+        energy_used_list (list[float]): Liste vide par défaut pour l'historique de consommation
+                                        d'énergie.
         energy_used_unit (str): Unité par défaut de la consommation d'énergie.
         co2_emissions (float): Valeur par défaut des émissions de CO2.
-        co2_emissions_list (list[float]): Liste vide par défaut pour l'historique des émissions de CO2.
+        co2_emissions_list (list[float]): Liste vide par défaut pour l'historique des émissions de
+                                          CO2.
         co2_emissions_unit (str): Unité par défaut des émissions de CO2.
     """
 
@@ -78,17 +80,18 @@ class GlobalConsumption:
             or self.defaultValues.co2_emissions
         )
         self.energy_used_list = [
-            float(x) for x in (
-                (self.redis_client.get("energy_used_list") or "")
-                .split(self.defaultValues.separator)
-            ) if x
-        ] or self.defaultValues.energy_used_list
+                                    float(x) for x in
+                                    ((self.redis_client.get("energy_used_list") or "").split(
+                                        self.defaultValues.separator
+                                    )
+                                    ) if x
+                                ] or self.defaultValues.energy_used_list
         self.co2_emissions_list = [
-            float(x) for x in (
-                (self.redis_client.get("co2_emissions_list") or "")
-                .split(self.defaultValues.separator)
-            ) if x
-        ] or self.defaultValues.co2_emissions_list
+                                      float(x) for x in
+                                      ((self.redis_client.get("co2_emissions_list") or "").split(
+                                          self.defaultValues.separator
+                                      )) if x
+                                  ] or self.defaultValues.co2_emissions_list
         self.energy_used_unit = (
                 self.redis_client.get("energy_used_unit")
                 or self.defaultValues.energy_used_unit
