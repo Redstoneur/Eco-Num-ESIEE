@@ -206,8 +206,12 @@ getGlobalConsumption();
         title="Consommation pour toute les simulations"
         :energyUsed="global_consumption.energy_used"
         :energyUsedUnit="global_consumption.energy_used_unit"
+        energyIcon="⚡"
+        energyColor="#4CAF50"
         :co2Emissions="global_consumption.co2_emissions"
         :co2EmissionsUnit="global_consumption.co2_emissions_unit"
+        co2Icon="💨"
+        co2Color="#0080ff"
     />
 
     <ProjectInfo
