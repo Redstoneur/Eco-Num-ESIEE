@@ -233,7 +233,7 @@ getGlobalConsumption();
         v-model:temperature_cable_initiale="temperature_cable_initiale"
         duree_minutes_label="Nombre de minutes à simuler (min)"
         v-model:duree_minutes="duree_minutes"
-        simulation_duration_minutes_label="Durée de la simulation (min)"
+        simulation_duration_minutes_label="Durée de la simulation (s)"
         v-model:simulation_duration_minutes="simulation_duration_minutes"
         time_step_label="Durée de la simulation pour une valeur suivante (s)"
         v-model:time_step="time_step_microsecond"
