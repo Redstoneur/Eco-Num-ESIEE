@@ -21,7 +21,7 @@ class RedisClient:
 
     def __init__(
             self,
-            host: str = redis,
+            host: str = "redis",
             port: int = 6379
     ) -> None:
         """
