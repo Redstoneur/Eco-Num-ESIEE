@@ -169,7 +169,7 @@ class GlobalConsumption:
         self.co2_emissions_list = self.defaultValues.co2_emissions_list
         self._save()
 
-    def __dict__(self) -> dict:
+    def to_dict(self) -> dict:
         """
         Retourne un dictionnaire représentant l'état de l'objet.
         :return: Dictionnaire représentant l'état de l'objet.
@@ -188,4 +188,4 @@ class GlobalConsumption:
         Retourne une représentation sous forme de chaîne de caractères de l'objet.
         :return: Représentation sous forme de chaîne de caractères de l'objet.
         """
-        return str(self.__dict__())
+        return str(self.to_dict())
