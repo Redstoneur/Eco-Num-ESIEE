@@ -118,10 +118,12 @@ defineProps<{
 }
 
 .result-grid {
-  display: flex;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 1rem;
   justify-items: center;
+  align-items: center;
+  width: 100%;
 }
 
 .result-grid-item {
