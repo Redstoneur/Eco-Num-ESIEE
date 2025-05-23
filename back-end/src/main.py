@@ -19,6 +19,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from scipy.integrate import odeint
 
+from GlobalConsumption import GlobalConsumption
+
 ####################################################################################################
 ### Constantes #####################################################################################
 ####################################################################################################
@@ -119,7 +121,7 @@ class GlobalConsumptionResponse(BaseModel):
 ### Variables globales #############################################################################
 ####################################################################################################
 
-global_consumption: GlobalConsumptionResponse = GlobalConsumptionResponse()
+global_consumption: GlobalConsumption = GlobalConsumption()
 
 
 ####################################################################################################
@@ -293,10 +295,10 @@ def update_global_consumption(var: CableTemperatureConsumptionSimulationResponse
                 consommation.
     """
     global global_consumption
-    global_consumption.energy_used += var.energy_used
-    global_consumption.energy_used_list.append(var.energy_used)
-    global_consumption.co2_emissions += var.co2_emissions
-    global_consumption.co2_emissions_list.append(var.co2_emissions)
+    global_consumption.update(
+        energy_used=var.energy_used,
+        co2_emissions=var.co2_emissions
+    )
 
 
 def update_global_consumption_list(var: MultipleCableTemperatureConsumptionSimulationResponse):
@@ -306,10 +308,12 @@ def update_global_consumption_list(var: MultipleCableTemperatureConsumptionSimul
                 données de consommation.
     """
     global global_consumption
-    global_consumption.energy_used += var.cumulative_energy_used
-    global_consumption.energy_used_list.extend(var.energy_used_list)
-    global_consumption.co2_emissions += var.cumulative_co2_emissions
-    global_consumption.co2_emissions_list.extend(var.co2_emissions_list)
+    global_consumption.update_list(
+        energy_used=var.cumulative_energy_used,
+        co2_emissions=var.cumulative_co2_emissions,
+        energy_used_list=var.energy_used_list,
+        co2_emissions_list=var.co2_emissions_list
+    )
 
 
 def reset_global_consumption():
@@ -317,8 +321,22 @@ def reset_global_consumption():
     Réinitialise la consommation globale.
     """
     global global_consumption
-    global_consumption = GlobalConsumptionResponse()
+    global_consumption.reset()
 
+def get_global_consumption() -> GlobalConsumptionResponse:
+    """
+    Récupère la consommation globale.
+    :return: Instance de GlobalConsumptionResponse contenant les données de consommation.
+    """
+    global global_consumption
+    return GlobalConsumptionResponse(
+        energy_used=global_consumption.energy_used,
+        energy_used_list=global_consumption.energy_used_list,
+        energy_used_unit=global_consumption.energy_used_unit,
+        co2_emissions=global_consumption.co2_emissions,
+        co2_emissions_list=global_consumption.co2_emissions_list,
+        co2_emissions_unit=global_consumption.co2_emissions_unit
+    )
 
 ####################################################################################################
 ### Classe personnalisée FastAPI ###################################################################
@@ -675,7 +693,7 @@ class MyAPI(FastAPI):
               générale.
             """
             try:
-                return global_consumption
+                return get_global_consumption()
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
@@ -707,7 +725,7 @@ class MyAPI(FastAPI):
             """
             try:
                 reset_global_consumption()
-                return global_consumption
+                return get_global_consumption()
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 

@@ -5,8 +5,12 @@ defineProps<{
   title: string;
   energyUsed: number;
   energyUsedUnit: string;
+  energyIcon: string;
+  energyColor: string;
   co2Emissions: number;
   co2EmissionsUnit: string;
+  co2Icon: string;
+  co2Color: string;
 }>();
 </script>
 
@@ -18,15 +22,15 @@ defineProps<{
           class="energy-displays-container-item"
           :value="energyUsed"
           :unit="energyUsedUnit"
-          icon="⚡"
-          color="#4CAF50"
+          :icon="energyIcon"
+          :color="energyColor"
       />
       <EnergyDisplay
           class="energy-displays-container-item"
           :value="co2Emissions"
           :unit="co2EmissionsUnit"
-          icon="💨"
-          color="#0080ff"
+          :icon="co2Icon"
+          :color="co2Color"
       />
     </div>
   </div>

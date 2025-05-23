@@ -1,14 +1,14 @@
 <script setup lang="ts">
 // Importation des dépendances
 import {ref} from "vue";
-import {VuePlotly} from "vue3-plotly";
 import type {Data, Layout} from "plotly.js";
 
 // Importation des composants
 import Tile from "./components/Tile.vue";
-import ProjectInfo from './components/ProjectInfo.vue';
 import EnergyConsumptionDisplay from "./components/energy/EnergyConsumptionDisplay.vue";
+import ProjectInfo from './components/ProjectInfo.vue';
 import Formulaire from "./components/form/Formulaire.vue";
+import Result from "./components/Result.vue";
 import Loader from './components/Loader.vue';
 import Error from './components/Error.vue';
 
@@ -206,8 +206,12 @@ getGlobalConsumption();
         title="Consommation pour toute les simulations"
         :energyUsed="global_consumption.energy_used"
         :energyUsedUnit="global_consumption.energy_used_unit"
+        energyIcon="⚡"
+        energyColor="#4CAF50"
         :co2Emissions="global_consumption.co2_emissions"
         :co2EmissionsUnit="global_consumption.co2_emissions_unit"
+        co2Icon="💨"
+        co2Color="#0080ff"
     />
 
     <ProjectInfo
@@ -218,72 +222,73 @@ getGlobalConsumption();
     />
 
     <Formulaire
+        title="Paramètres de la simulation"
+        temperature_ambiante_label="Température ambiante (°C)"
         v-model:temperature_ambiante="temperature_ambiante"
+        vitesse_vent_label="Vitesse du vent (m/s)"
         v-model:vitesse_vent="vitesse_vent"
+        intensite_courant_label="Intensité du courant (A)"
         v-model:intensite_courant="intensite_courant"
+        temperature_cable_initiale_label="Température initiale du câble (°C)"
         v-model:temperature_cable_initiale="temperature_cable_initiale"
+        duree_minutes_label="Nombre de minutes à simuler (min)"
         v-model:duree_minutes="duree_minutes"
+        simulation_duration_minutes_label="Durée de la simulation (s)"
         v-model:simulation_duration_minutes="simulation_duration_minutes"
-        v-model:time_step_microsecond="time_step_microsecond"
+        time_step_label="Durée de la simulation pour une valeur suivante (s)"
+        v-model:time_step="time_step_microsecond"
+        buttonLabel="Lancer la simulation"
         :loading="loading"
         @submit="envoyerSimulation"
     />
 
     <Loader v-if="loading"/>
     <Error v-if="error" :error="error"/>
+    <Result
+        v-if="result"
+        title="Résultats"
+        paramsTitle="📝 Paramètres de la simulation"
+        :params="{
+          temperatureAmbiante: temperature_ambiante,
+          vitesseVent: vitesse_vent,
+          intensiteCourant: intensite_courant,
+          temperatureCableInitiale: temperature_cable_initiale,
+          dureeMinutes: duree_minutes,
+          simulationDurationMinutes: simulation_duration_minutes,
+          timeStep: time_step_microsecond
+        }"
+        temperatureTitle="🌡️ Températures"
+        :temperature="{
+          initial: {
+            value: y[0],
+             unit: result.final_temperature_unit
+             },
+          final: {
+            value: y[y.length - 1],
+             unit: result.final_temperature_unit
+          }
+        }"
+        energyTitle="⚡ Énergie utilisée"
+        :energy="{
+          value: result.cumulative_energy_used,
+          unit: result.energy_used_unit
+        }"
+        co2Title="💨 Émissions CO₂"
+        :co2="{
+          value: result.cumulative_co2_emissions,
+          unit: result.co2_emissions_unit
+        }"
+        executionTimeTitle="⏱️ Temps total d'exécution"
+        :executionTime="{
+          value: result.cumulative_execution_time,
+          unit: result.execution_time_unit
+        }"
+        graphTitle="📈 Graphique des températures finales"
+        :graphData="graphData"
+        :graphLayout="graphLayout"
+    />
 
-    <div v-if="result" class="result">
-      <h2>Résultats</h2>
 
-      <div class="block">
-        <h3>📝 Paramètres de la simulation</h3>
-        <ul>
-          <li>Température ambiante : {{ temperature_ambiante }} °C</li>
-          <li>Vitesse du vent : {{ vitesse_vent }} m/s</li>
-          <li>Intensité du courant : {{ intensite_courant }} A</li>
-          <li>Température initiale du câble : {{ temperature_cable_initiale }} °C</li>
-          <li>Nombre de minutes à simuler : {{ duree_minutes }} min</li>
-          <li>Durée de simulation pour une valeur suivante : {{ simulation_duration_minutes }} s</li>
-          <li>Pas de temps pour la simulation : {{ time_step_microsecond }} s</li>
-        </ul>
-      </div>
-
-      <div class="block">
-        <h3>🌡️ Températures finales</h3>
-        <p>
-          {{ y[0] }} {{ result.final_temperature_unit }} - {{ y[y.length - 1] }} {{ result.final_temperature_unit }}
-        </p>
-      </div>
-
-      <div class="block">
-        <h3>⚡ Énergie utilisée cumulée</h3>
-        <p>
-          {{ result.cumulative_energy_used }}
-          {{ result.energy_used_unit }}
-        </p>
-      </div>
-
-      <div class="block">
-        <h3>💨 Émissions CO₂ cumulées</h3>
-        <p>
-          {{ result.cumulative_co2_emissions }}
-          {{ result.co2_emissions_unit }}
-        </p>
-      </div>
-
-      <div class="block">
-        <h3>⏱️ Temps total d'exécution</h3>
-        <p>
-          {{ result.cumulative_execution_time }}
-          {{ result.execution_time_unit }}
-        </p>
-      </div>
-
-      <div class="block block-graphique">
-        <h3>📈 Graphique des températures finales</h3>
-        <VuePlotly :data="graphData" :layout="graphLayout"/>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -295,26 +300,5 @@ getGlobalConsumption();
   background: #f9fafb;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.block-graphique h3 {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.result {
-  margin-top: 2rem;
-  background-color: #ecf0f1;
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-.block {
-  margin-bottom: 1.5rem;
-}
-
-h3 {
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
 }
 </style>

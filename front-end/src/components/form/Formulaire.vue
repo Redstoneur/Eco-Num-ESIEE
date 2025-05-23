@@ -5,13 +5,22 @@ import FormGroup from "./FormGroup.vue";
 import FormSubmitButton from "./FormSubmitButton.vue";
 
 defineProps<{
+  title: string;
+  temperature_ambiante_label: string;
   temperature_ambiante: number;
+  vitesse_vent_label: string;
   vitesse_vent: number;
+  intensite_courant_label: string;
   intensite_courant: number;
+  temperature_cable_initiale_label: string;
   temperature_cable_initiale: number;
+  duree_minutes_label: string;
   duree_minutes: number;
+  simulation_duration_minutes_label: string;
   simulation_duration_minutes: number;
-  time_step_microsecond: number;
+  time_step_label: string;
+  time_step: number;
+  buttonLabel: string;
   loading: boolean;
 }>();
 
@@ -23,56 +32,56 @@ defineEmits([
   "update:temperature_cable_initiale",
   "update:duree_minutes",
   "update:simulation_duration_minutes",
-  "update:time_step_microsecond",
+  "update:time_step",
 ]);
 </script>
 
 <template>
   <form class="form-grid" @submit.prevent="$emit('submit')">
-    <FormTitle title="Paramètres de la simulation" />
+    <FormTitle :title="title" />
     <FormGroup
-        label="Température ambiante (°C)"
+        :label="temperature_ambiante_label"
         :modelValue="temperature_ambiante"
         @update:modelValue="(value) => $emit('update:temperature_ambiante', value)"
         type="number"
     />
     <FormGroup
-        label="Vitesse du vent (m/s)"
+        :label="vitesse_vent_label"
         :modelValue="vitesse_vent"
         @update:modelValue="(value) => $emit('update:vitesse_vent', value)"
         type="number"
     />
     <FormGroup
-        label="Intensité du courant (A)"
+        :label="intensite_courant_label"
         :modelValue="intensite_courant"
         @update:modelValue="(value) => $emit('update:intensite_courant', value)"
         type="number"
     />
     <FormGroup
-        label="Température initiale du câble (°C)"
+        :label="temperature_cable_initiale_label"
         :modelValue="temperature_cable_initiale"
         @update:modelValue="(value) => $emit('update:temperature_cable_initiale', value)"
         type="number"
     />
     <FormGroup
-        label="Nombre de minutes à simuler (min)"
+        :label="duree_minutes_label"
         :modelValue="duree_minutes"
         @update:modelValue="(value) => $emit('update:duree_minutes', value)"
         type="number"
     />
     <FormGroup
-        label="Durée de la simulation pour une valeur suivante (s)"
+        :label="simulation_duration_minutes_label"
         :modelValue="simulation_duration_minutes"
         @update:modelValue="(value) => $emit('update:simulation_duration_minutes', value)"
         type="number"
     />
     <FormGroup
-        label="Pas de temps pour la simulation (s)"
-        :modelValue="time_step_microsecond"
-        @update:modelValue="(value) => $emit('update:time_step_microsecond', value)"
+        :label="time_step_label"
+        :modelValue="time_step"
+        @update:modelValue="(value) => $emit('update:time_step', value)"
         type="number"
     />
-    <FormSubmitButton :loading="loading" label="Lancer la simulation"/>
+    <FormSubmitButton :loading="loading" :label="buttonLabel" />
   </form>
 </template>
 

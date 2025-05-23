@@ -1,16 +1,11 @@
 services:
-  server:
-    build:
-      context: ./back-end
-      dockerfile: Dockerfile
-    container_name: Server
-    image: eco-num-esiee-server
+  redis:
+    image: redis:latest
+    container_name: Redis
     restart: unless-stopped
     networks:
       app-net:
-        ipv4_address: 172.18.0.10
-    ports:
-      - "8000:8000"
+        ipv4_address: 172.18.0.12
     deploy:
       resources:
         limits:
@@ -23,6 +18,45 @@ services:
       - TZ=Europe/Paris
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  server:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    container_name: Server
+    image: eco-num-esiee-server
+    restart: unless-stopped
+    networks:
+      app-net:
+        ipv4_address: 172.18.0.10
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+        restart: true
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0' # Limite à 1 CPU
+          memory: '512M' # Limite à 512 MB de RAM
+        reservations:
+          cpus: '0.5' # Réservation de 0.5 CPU
+          memory: '256M' # Réservation de 256 MB de RAM
+    environment:
+      - TZ=Europe/Paris
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
@@ -72,3 +106,6 @@ networks:
     ipam:
       config:
         - subnet: 172.18.0.0/16
+
+volumes:
+    redis_data:
