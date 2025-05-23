@@ -257,7 +257,7 @@ getGlobalConsumption();
           simulationDurationMinutes: simulation_duration_minutes,
           timeStep: time_step_microsecond
         }"
-        temperatureTitle="🌡️ Températures finales"
+        temperatureTitle="🌡️ Températures"
         :temperature="{
           initial: {
             value: y[0],
@@ -268,17 +268,17 @@ getGlobalConsumption();
              unit: result.final_temperature_unit
           }
         }"
-        energyTitle="⚡ Énergie utilisée cumulée"
+        energyTitle="⚡ Énergie utilisée"
         :energy="{
           value: result.cumulative_energy_used,
           unit: result.energy_used_unit
         }"
-        co2Title="💨 Émissions CO₂ cumulées"
+        co2Title="💨 Émissions CO₂"
         :co2="{
           value: result.cumulative_co2_emissions,
           unit: result.co2_emissions_unit
         }"
-        executionTimeTitle="⏱️ Temps total d\'exécution"
+        executionTimeTitle="⏱️ Temps total d'exécution"
         :executionTime="{
           value: result.cumulative_execution_time,
           unit: result.execution_time_unit
