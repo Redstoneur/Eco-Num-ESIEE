@@ -133,9 +133,10 @@ defineProps<{
 <style scoped>
 .result {
   margin-top: 2rem;
-  background-color: #ecf0f1;
   padding: 1rem;
+  border: 1px solid #ccc;
   border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .result-block {

@@ -92,8 +92,8 @@ defineEmits([
   gap: 1.5rem;
   border: 1px solid #ccc;
   border-radius: 8px;
-  padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
 }
 
 @media (max-width: 768px) {
