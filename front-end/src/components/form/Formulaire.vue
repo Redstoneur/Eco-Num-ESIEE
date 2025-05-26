@@ -40,42 +40,56 @@ defineEmits([
   <form class="form-grid" @submit.prevent="$emit('submit')">
     <FormTitle :title="title"/>
     <FormGroup
+        id="temperature_ambiante"
+        name="temperature_ambiante"
         :label="temperature_ambiante_label"
         :modelValue="temperature_ambiante"
         @update:modelValue="(value) => $emit('update:temperature_ambiante', value)"
         type="number"
     />
     <FormGroup
+        id="vitesse_vent"
+        name="vitesse_vent"
         :label="vitesse_vent_label"
         :modelValue="vitesse_vent"
         @update:modelValue="(value) => $emit('update:vitesse_vent', value)"
         type="number"
     />
     <FormGroup
+        id="intensite_courant"
+        name="intensite_courant"
         :label="intensite_courant_label"
         :modelValue="intensite_courant"
         @update:modelValue="(value) => $emit('update:intensite_courant', value)"
         type="number"
     />
     <FormGroup
+        id="temperature_cable_initiale"
+        name="temperature_cable_initiale"
         :label="temperature_cable_initiale_label"
         :modelValue="temperature_cable_initiale"
         @update:modelValue="(value) => $emit('update:temperature_cable_initiale', value)"
         type="number"
     />
     <FormGroup
+        id="number_of_repetition"
+        name="number_of_repetition"
         :label="number_of_repetition_label"
         :modelValue="number_of_repetition"
         @update:modelValue="(value) => $emit('update:number_of_repetition', value)"
         type="number"
     />
     <FormGroup
+        id="simulation_duration"
+        name="simulation_duration"
         :label="simulation_duration_label"
         :modelValue="simulation_duration"
         @update:modelValue="(value) => $emit('update:simulation_duration', value)"
         type="number"
     />
     <FormGroup
+        id="time_step"
+        name="time_step"
         :label="time_step_label"
         :modelValue="time_step"
         @update:modelValue="(value) => $emit('update:time_step', value)"
