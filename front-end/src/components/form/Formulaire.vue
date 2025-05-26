@@ -14,8 +14,8 @@ defineProps<{
   intensite_courant: number;
   temperature_cable_initiale_label: string;
   temperature_cable_initiale: number;
-  simulation_duration_minutes_label: string;
-  simulation_duration_minutes: number;
+  number_of_repetition_label: string;
+  number_of_repetition: number;
   simulation_duration_label: string;
   simulation_duration: number;
   time_step_label: string;
@@ -30,7 +30,7 @@ defineEmits([
   "update:vitesse_vent",
   "update:intensite_courant",
   "update:temperature_cable_initiale",
-  "update:simulation_duration_minutes",
+  "update:number_of_repetition",
   "update:simulation_duration",
   "update:time_step",
 ]);
@@ -38,7 +38,7 @@ defineEmits([
 
 <template>
   <form class="form-grid" @submit.prevent="$emit('submit')">
-    <FormTitle :title="title" />
+    <FormTitle :title="title"/>
     <FormGroup
         :label="temperature_ambiante_label"
         :modelValue="temperature_ambiante"
@@ -64,9 +64,9 @@ defineEmits([
         type="number"
     />
     <FormGroup
-        :label="simulation_duration_minutes_label"
-        :modelValue="simulation_duration_minutes"
-        @update:modelValue="(value) => $emit('update:simulation_duration_minutes', value)"
+        :label="number_of_repetition_label"
+        :modelValue="number_of_repetition"
+        @update:modelValue="(value) => $emit('update:number_of_repetition', value)"
         type="number"
     />
     <FormGroup
@@ -81,7 +81,7 @@ defineEmits([
         @update:modelValue="(value) => $emit('update:time_step', value)"
         type="number"
     />
-    <FormSubmitButton :loading="loading" :label="buttonLabel" />
+    <FormSubmitButton :loading="loading" :label="buttonLabel"/>
   </form>
 </template>
 
@@ -97,7 +97,7 @@ defineEmits([
 }
 
 @media (max-width: 768px) {
-  .form-grid >* {
+  .form-grid > * {
     grid-column: span 3;
   }
 }

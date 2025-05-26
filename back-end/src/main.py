@@ -155,7 +155,7 @@ def simulate_cable_temperature(
         current_intensity: float,
         cable_temperature_initial: float,
         simulation_duration_seconds: int = 60,
-        time_step_microsecond: float = 1e-6
+        time_step: float = 1e-6
 ) -> CableTemperatureSimulationResponse:
     """
     Simule la température du câble sur une période donnée.
@@ -164,17 +164,17 @@ def simulate_cable_temperature(
     :param current_intensity: Intensité (A)
     :param cable_temperature_initial: Température initiale du câble (°C)
     :param simulation_duration_seconds: Durée de la simulation (s)
-    :param time_step_microsecond: Pas de temps pour la simulation (s)
+    :param time_step: Pas de temps pour la simulation (s)
     :return: Tuple contenant la température finale du câble, l'énergie utilisée (Wh), les émissions
              de CO2 (g) et le temps d'exécution (s).
     """
     total_time_s: float = simulation_duration_seconds
-    time_s: np.ndarray = np.arange(0, total_time_s, time_step_microsecond)
+    time_s: np.ndarray = np.arange(0, total_time_s, time_step)
 
     start_time: float = time.time()
     tc_sol: np.ndarray = odeint(d_tc_dt, cable_temperature_initial, time_s,
                                 args=(ambient_temperature, wind_speed, current_intensity),
-                                hmax=time_step_microsecond)
+                                hmax=time_step)
     end_time: float = time.time()
 
     final_tc: float = float(tc_sol[-1])
@@ -191,7 +191,7 @@ def simulate_cable_temperature_with_consumption(
         current_intensity: float,
         cable_temperature_initial: float,
         simulation_duration_seconds: int = 60,
-        time_step_microsecond: float = 1e-6
+        time_step: float = 1e-6
 ) -> CableTemperatureConsumptionSimulationResponse:
     """
     Simule la température du câble sur une période donnée et calcule la consommation d'énergie.
@@ -200,11 +200,16 @@ def simulate_cable_temperature_with_consumption(
     :param current_intensity: Intensité (A)
     :param cable_temperature_initial: Température initiale du câble (°C)
     :param simulation_duration_seconds: Durée de la simulation (s)
-    :param time_step_microsecond: Pas de temps pour la simulation (s)
+    :param time_step: Pas de temps pour la simulation (s)
     :return: Instance de ConsommationResponse contenant l'énergie utilisée et les émissions de CO2
              associées.
     """
-    tracker = EmissionsTracker(measure_power_secs=1, save_to_file=False)
+    tracker = EmissionsTracker(
+        measure_power_secs=1,
+        save_to_file=False,
+        allow_multiple_runs=True,
+        log_level="warning"
+    )
     try:
         tracker.start()
 
@@ -214,7 +219,7 @@ def simulate_cable_temperature_with_consumption(
             current_intensity=current_intensity,
             cable_temperature_initial=cable_temperature_initial,
             simulation_duration_seconds=simulation_duration_seconds,
-            time_step_microsecond=time_step_microsecond
+            time_step=time_step
         )
 
         # Arrête le tracker et récupère les émissions de CO2
@@ -233,9 +238,9 @@ def simulate_cable_temperature_with_consumption(
 
 
 def simulate_cable_temperature_over_x_minutes_with_consumption(
-        duration_minutes: int = 30,
-        simulation_duration_minutes: int = 60,
-        time_step_microsecond: float = 1e-6,
+        number_of_repetition: int = 30,
+        simulation_duration: int = 60,
+        time_step: float = 1e-6,
         ambient_temperature: float = 25,
         wind_speed: float = 1,
         current_intensity: float = 300,
@@ -243,9 +248,9 @@ def simulate_cable_temperature_over_x_minutes_with_consumption(
 ) -> MultipleCableTemperatureConsumptionSimulationResponse:
     """
     Simule la température du câble sur 30 minutes, en répétant la simulation chaque minute.
-    :param duration_minutes: Nombre de minutes à simuler (par défaut 30).
-    :param simulation_duration_minutes: Durée de la simulation pour une valeur suivante (s)
-    :param time_step_microsecond: Pas de temps pour la simulation (s)
+    :param number_of_repetition: Nombre de répétitions pour la simulation
+    :param simulation_duration: Durée de la simulation pour une valeur suivante (s)
+    :param time_step: Pas de temps pour la simulation (s)
     :param ambient_temperature: Température ambiante (°C)
     :param wind_speed: Vitesse du vent (m/s)
     :param current_intensity: Intensité (A)
@@ -261,16 +266,16 @@ def simulate_cable_temperature_over_x_minutes_with_consumption(
 
     current_cable_temperature: float = cable_temperature_initial
 
-    minutes_seconds = duration_minutes * 60
-    for tmp in range(0, minutes_seconds, simulation_duration_minutes):
+    temps = number_of_repetition * simulation_duration
+    for tmp in range(0, temps, simulation_duration):
         res = simulate_cable_temperature_with_consumption(
             ambient_temperature, wind_speed, current_intensity, current_cable_temperature,
-            simulation_duration_seconds=simulation_duration_minutes,
-            time_step_microsecond=time_step_microsecond
+            simulation_duration_seconds=simulation_duration,
+            time_step=time_step
         )
 
         final_temperature_list.append(res.final_temperature)
-        time_points_list.append(tmp + simulation_duration_minutes)
+        time_points_list.append(tmp + simulation_duration)
         energy_used_list.append(res.energy_used)
         co2_emissions_list.append(res.co2_emissions)
         execution_time.append(res.execution_time)
@@ -323,6 +328,7 @@ def reset_global_consumption():
     global global_consumption
     global_consumption.reset()
 
+
 def get_global_consumption() -> GlobalConsumptionResponse:
     """
     Récupère la consommation globale.
@@ -337,6 +343,7 @@ def get_global_consumption() -> GlobalConsumptionResponse:
         co2_emissions_list=global_consumption.co2_emissions_list,
         co2_emissions_unit=global_consumption.co2_emissions_unit
     )
+
 
 ####################################################################################################
 ### Classe personnalisée FastAPI ###################################################################
@@ -427,8 +434,8 @@ class MyAPI(FastAPI):
                 wind_speed: float = 1,
                 current_intensity: float = 300,
                 initial_cable_temperature: float = 25,
-                simulation_duration_minutes: int = 60,
-                time_step_microsecond: float = 1e-6
+                simulation_duration: int = 60,
+                time_step: float = 1e-6
         ):
             """
             API pour simuler la température d’un câble électrique.
@@ -440,9 +447,9 @@ class MyAPI(FastAPI):
             - **current_intensity** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
             - **initial_cable_temperature** (_float_, optionnel) : Température initiale du câble
               (_°C_, défaut : 25)
-            - **simulation_duration_minutes** (_int_, optionnel) : Durée de la simulation
+            - **simulation_duration** (_int_, optionnel) : Durée de la simulation
               (_minutes_, défaut : 60)
-            - **time_step_microsecond** (_float_, optionnel) : Pas de temps pour la simulation
+            - **time_step** (_float_, optionnel) : Pas de temps pour la simulation
               (_s_, défaut : 1e-6)
 
             **Retour :**
@@ -456,8 +463,8 @@ class MyAPI(FastAPI):
                         wind_speed=wind_speed,
                         current_intensity=current_intensity,
                         cable_temperature_initial=initial_cable_temperature,
-                        simulation_duration_seconds=simulation_duration_minutes,
-                        time_step_microsecond=time_step_microsecond
+                        simulation_duration_seconds=simulation_duration,
+                        time_step=time_step
                     )
                 )
 
@@ -491,9 +498,9 @@ class MyAPI(FastAPI):
                 wind_speed: float = 1,
                 current_intensity: float = 300,
                 initial_cable_temperature: float = 25,
-                simulation_duration_minutes: int = 60,
-                time_step_microsecond: float = 1e-6,
-                duration_minutes: int = 30
+                simulation_duration: int = 60,
+                time_step: float = 1e-6,
+                number_of_repetition: int = 30
         ):
             """
             API permettant de simuler la température d’un câble électrique sur plusieurs minutes.
@@ -505,11 +512,12 @@ class MyAPI(FastAPI):
             - **current_intensity** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
             - **initial_cable_temperature** (_float_, optionnel) : Température initiale du câble
               (_°C_, défaut : 25)
-            - **simulation_duration_minutes** (_int_, optionnel) : Durée de la simulation pour une
+            - **simulation_duration** (_int_, optionnel) : Durée de la simulation pour une
               valeur suivante (_s_, défaut : 60)
-            - **time_step_microsecond** (_float_, optionnel) : Pas de temps pour la simulation
+            - **time_step** (_float_, optionnel) : Pas de temps pour la simulation
               (_s_, défaut : 1e-6)
-            - **duration_minutes** (_int_, optionnel) : Nombre de minutes à simuler (_défaut : 30_)
+            - **number_of_repetition** (_int_, optionnel) : Nombre de répétitions pour la simulation
+              (_défaut : 30_)
 
             **Retour :**
             - Instance de `MultipleCableTemperatureSimulationResponse` contenant les résultats de la
@@ -518,9 +526,9 @@ class MyAPI(FastAPI):
             try:
                 res: MultipleCableTemperatureConsumptionSimulationResponse = (
                     simulate_cable_temperature_over_x_minutes_with_consumption(
-                        duration_minutes=duration_minutes,
-                        simulation_duration_minutes=simulation_duration_minutes,
-                        time_step_microsecond=time_step_microsecond,
+                        number_of_repetition=number_of_repetition,
+                        simulation_duration=simulation_duration,
+                        time_step=time_step,
                         ambient_temperature=ambient_temperature,
                         wind_speed=wind_speed,
                         current_intensity=current_intensity,
@@ -561,8 +569,8 @@ class MyAPI(FastAPI):
                 wind_speed: float = 1,
                 current_intensity: float = 300,
                 initial_cable_temperature: float = 25,
-                simulation_duration_minutes: int = 60,
-                time_step_microsecond: float = 1e-6
+                simulation_duration: int = 60,
+                time_step: float = 1e-6
         ):
             """
             API pour simuler la température d’un câble électrique avec consommation d’énergie.
@@ -574,9 +582,9 @@ class MyAPI(FastAPI):
             - **current_intensity** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
             - **initial_cable_temperature** (_float_, optionnel) : Température initiale du câble
               (_°C_, défaut : 25)
-            - **simulation_duration_minutes** (_int_, optionnel) : Durée de la simulation
+            - **simulation_duration** (_int_, optionnel) : Durée de la simulation
               (_minutes_, défaut : 60)
-            - **time_step_microsecond** (_float_, optionnel) : Pas de temps pour la simulation
+            - **time_step** (_float_, optionnel) : Pas de temps pour la simulation
               (_s_, défaut : 1e-6)
 
             **Retour :**
@@ -590,8 +598,8 @@ class MyAPI(FastAPI):
                         wind_speed=wind_speed,
                         current_intensity=current_intensity,
                         cable_temperature_initial=initial_cable_temperature,
-                        simulation_duration_seconds=simulation_duration_minutes,
-                        time_step_microsecond=time_step_microsecond
+                        simulation_duration_seconds=simulation_duration,
+                        time_step=time_step
                     )
                 )
 
@@ -623,9 +631,9 @@ class MyAPI(FastAPI):
                 wind_speed: float = 1,
                 current_intensity: float = 300,
                 initial_cable_temperature: float = 25,
-                simulation_duration_minutes: int = 60,
-                time_step_microsecond: float = 1e-6,
-                duration_minutes: int = 30
+                simulation_duration: int = 60,
+                time_step: float = 1e-6,
+                number_of_repetition: int = 30
         ):
             """
             API permettant de simuler la température d’un câble électrique avec consommation
@@ -638,11 +646,12 @@ class MyAPI(FastAPI):
             - **current_intensity** (_float_, optionnel) : Intensité du courant (_A_, défaut : 300)
             - **initial_cable_temperature** (_float_, optionnel) : Température initiale du câble
               (_°C_, défaut : 25)
-            - **simulation_duration_minutes** (_int_, optionnel) : Durée de la simulation pour une
+            - **simulation_duration** (_int_, optionnel) : Durée de la simulation pour une
               valeur suivante (_s_, défaut : 60)
-            - **time_step_microsecond** (_float_, optionnel) : Pas de temps pour la simulation
+            - **time_step** (_float_, optionnel) : Pas de temps pour la simulation
               (_s_, défaut : 1e-6)
-            - **duration_minutes** (_int_, optionnel) : Nombre de minutes à simuler (_défaut : 30_)
+            - **number_of_repetition** (_int_, optionnel) : Nombre de répétitions pour la simulation
+              (_défaut : 30_)
 
             **Retour :**
             - Instance de `MultipleCableTemperatureConsumptionSimulationResponse` contenant les
@@ -651,9 +660,9 @@ class MyAPI(FastAPI):
             try:
                 res: MultipleCableTemperatureConsumptionSimulationResponse = (
                     simulate_cable_temperature_over_x_minutes_with_consumption(
-                        duration_minutes=duration_minutes,
-                        simulation_duration_minutes=simulation_duration_minutes,
-                        time_step_microsecond=time_step_microsecond,
+                        number_of_repetition=number_of_repetition,
+                        simulation_duration=simulation_duration,
+                        time_step=time_step,
                         ambient_temperature=ambient_temperature,
                         wind_speed=wind_speed,
                         current_intensity=current_intensity,

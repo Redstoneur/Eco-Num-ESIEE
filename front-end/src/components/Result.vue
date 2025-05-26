@@ -25,7 +25,7 @@ defineProps<{
       label: string;
       unit: string;
     }
-    simulationDurationMinutes: {
+    numberOfRepetition: {
       label: string;
       unit: string;
     }
@@ -43,7 +43,7 @@ defineProps<{
     vitesseVent: number;
     intensiteCourant: number;
     temperatureCableInitiale: number;
-    simulationDurationMinutes: number;
+    numberOfRepetition: number;
     simulationDuration: number;
     timeStep: number;
   };
@@ -90,7 +90,7 @@ defineProps<{
         <li> {{ paramsLabels.vitesseVent.label }} : {{ params.vitesseVent }} {{ paramsLabels.vitesseVent.unit }}</li>
         <li> {{ paramsLabels.intensiteCourant.label }} : {{ params.intensiteCourant }} {{ paramsLabels.intensiteCourant.unit }}</li>
         <li> {{ paramsLabels.temperatureCableInitiale.label }} : {{ params.temperatureCableInitiale }} {{ paramsLabels.temperatureCableInitiale.unit }}</li>
-        <li> {{ paramsLabels.simulationDurationMinutes.label }} : {{ params.simulationDurationMinutes }} {{ paramsLabels.simulationDurationMinutes.unit }}</li>
+        <li> {{ paramsLabels.numberOfRepetition.label }} : {{ params.numberOfRepetition }} {{ paramsLabels.numberOfRepetition.unit }}</li>
         <li> {{ paramsLabels.simulationDuration.label }} : {{ params.simulationDuration }} {{ paramsLabels.simulationDuration.unit }}</li>
         <li> {{ paramsLabels.timeStep.label }} : {{ params.timeStep }} {{ paramsLabels.timeStep.unit }}</li>
       </ul>
