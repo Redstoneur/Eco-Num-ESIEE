@@ -16,6 +16,7 @@ defineProps<{
   margin-bottom: 2rem;
   padding: 1.5rem;
   background: linear-gradient(to left top, #38b2f3, #2575fc);
+  border: 1px solid #ccc;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   color: #fff;

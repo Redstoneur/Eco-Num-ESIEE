@@ -8,13 +8,43 @@ import type {Data, Layout} from "plotly.js";
 defineProps<{
   title: string;
   paramsTitle: string;
+  paramsLabels: {
+    temperatureAmbiante: {
+      label: string;
+      unit: string;
+    }
+    vitesseVent: {
+      label: string;
+      unit: string;
+    }
+    intensiteCourant: {
+      label: string;
+      unit: string;
+    }
+    temperatureCableInitiale: {
+      label: string;
+      unit: string;
+    }
+    numberOfRepetition: {
+      label: string;
+      unit: string;
+    }
+    simulationDuration: {
+      label: string;
+      unit: string;
+    }
+    timeStep: {
+      label: string;
+      unit: string;
+    }
+  }
   params: {
     temperatureAmbiante: number;
     vitesseVent: number;
     intensiteCourant: number;
     temperatureCableInitiale: number;
-    dureeMinutes: number;
-    simulationDurationMinutes: number;
+    numberOfRepetition: number;
+    simulationDuration: number;
     timeStep: number;
   };
   temperatureTitle: string;
@@ -56,13 +86,13 @@ defineProps<{
     <div class="result-block">
       <h3>{{ paramsTitle }}</h3>
       <ul>
-        <li>Température ambiante : {{ params.temperatureAmbiante }} °C</li>
-        <li>Vitesse du vent : {{ params.vitesseVent }} m/s</li>
-        <li>Intensité du courant : {{ params.intensiteCourant }} A</li>
-        <li>Température initiale du câble : {{ params.temperatureCableInitiale }} °C</li>
-        <li>Nombre de minutes à simuler : {{ params.dureeMinutes }} min</li>
-        <li>Durée de simulation pour une valeur suivante : {{ params.simulationDurationMinutes }} s</li>
-        <li>Pas de temps pour la simulation : {{ params.timeStep }} s</li>
+        <li> {{ paramsLabels.temperatureAmbiante.label }} : {{ params.temperatureAmbiante }} {{ paramsLabels.temperatureAmbiante.unit }}</li>
+        <li> {{ paramsLabels.vitesseVent.label }} : {{ params.vitesseVent }} {{ paramsLabels.vitesseVent.unit }}</li>
+        <li> {{ paramsLabels.intensiteCourant.label }} : {{ params.intensiteCourant }} {{ paramsLabels.intensiteCourant.unit }}</li>
+        <li> {{ paramsLabels.temperatureCableInitiale.label }} : {{ params.temperatureCableInitiale }} {{ paramsLabels.temperatureCableInitiale.unit }}</li>
+        <li> {{ paramsLabels.numberOfRepetition.label }} : {{ params.numberOfRepetition }} {{ paramsLabels.numberOfRepetition.unit }}</li>
+        <li> {{ paramsLabels.simulationDuration.label }} : {{ params.simulationDuration }} {{ paramsLabels.simulationDuration.unit }}</li>
+        <li> {{ paramsLabels.timeStep.label }} : {{ params.timeStep }} {{ paramsLabels.timeStep.unit }}</li>
       </ul>
     </div>
 
@@ -103,9 +133,10 @@ defineProps<{
 <style scoped>
 .result {
   margin-top: 2rem;
-  background-color: #ecf0f1;
   padding: 1rem;
+  border: 1px solid #ccc;
   border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .result-block {
@@ -154,6 +185,7 @@ defineProps<{
     flex-direction: column;
     align-items: stretch;
   }
+
   .result-grid-item {
     max-width: 100%;
     min-width: 0;
@@ -164,9 +196,11 @@ defineProps<{
   .result {
     padding: 0.5rem;
   }
+
   .result-block {
     margin-bottom: 1rem;
   }
+
   .result-grid-item {
     padding: 0.5rem;
     font-size: 0.95rem;

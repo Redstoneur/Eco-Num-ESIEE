@@ -10,6 +10,7 @@ import ProjectInfo from './components/ProjectInfo.vue';
 import Formulaire from "./components/form/Formulaire.vue";
 import Result from "./components/Result.vue";
 import Loader from './components/Loader.vue';
+import Empty from './components/Empty.vue';
 import Error from './components/Error.vue';
 
 // Importation des Fonctions
@@ -47,9 +48,9 @@ const temperature_ambiante = ref<number>(25);
 const vitesse_vent = ref<number>(1);
 const intensite_courant = ref<number>(300);
 const temperature_cable_initiale = ref<number>(25);
-const duree_minutes = ref<number>(30);
-const simulation_duration_minutes = ref<number>(60);
-const time_step_microsecond = ref<number>(0.1);
+const number_of_repetition = ref<number>(30);
+const simulation_duration = ref<number>(60);
+const time_step = ref<number>(0.1);
 
 // Paramètres de simulation
 const parametres = ref<{
@@ -57,9 +58,9 @@ const parametres = ref<{
   vitesse_vent: number;
   intensite_courant: number;
   temperature_cable_initiale: number;
-  duree_minutes: number;
-  simulation_duration_minutes: number;
-  time_step_microsecond: number;
+  number_of_repetition: number;
+  simulation_duration: number;
+  time_step: number;
 }>();
 
 // consommation globale des simulations sur toute la durée de fonctionnement des API
@@ -122,9 +123,9 @@ const envoyerSimulation = async () => {
       vitesse_vent: vitesse_vent.value,
       intensite_courant: intensite_courant.value,
       temperature_cable_initiale: temperature_cable_initiale.value,
-      duree_minutes: duree_minutes.value,
-      simulation_duration_minutes: simulation_duration_minutes.value,
-      time_step_microsecond: time_step_microsecond.value,
+      number_of_repetition: number_of_repetition.value,
+      simulation_duration: simulation_duration.value,
+      time_step: time_step.value,
     };
 
     // Appel de l'API pour simuler la consommation de température du câble
@@ -133,9 +134,9 @@ const envoyerSimulation = async () => {
       wind_speed: vitesse_vent.value,
       current_intensity: intensite_courant.value,
       initial_cable_temperature: temperature_cable_initiale.value,
-      simulation_duration_minutes: simulation_duration_minutes.value,
-      time_step_microsecond: time_step_microsecond.value,
-      duration_minutes: duree_minutes.value,
+      number_of_repetition: number_of_repetition.value,
+      time_step: time_step.value,
+      simulation_duration: simulation_duration.value,
     });
 
     // Création des tableaux x et y pour le graphique
@@ -231,31 +232,64 @@ getGlobalConsumption();
         v-model:intensite_courant="intensite_courant"
         temperature_cable_initiale_label="Température initiale du câble (°C)"
         v-model:temperature_cable_initiale="temperature_cable_initiale"
-        duree_minutes_label="Nombre de minutes à simuler (min)"
-        v-model:duree_minutes="duree_minutes"
-        simulation_duration_minutes_label="Durée de la simulation (s)"
-        v-model:simulation_duration_minutes="simulation_duration_minutes"
-        time_step_label="Durée de la simulation pour une valeur suivante (s)"
-        v-model:time_step="time_step_microsecond"
+        number_of_repetition_label="Nombre de répétitions"
+        v-model:number_of_repetition="number_of_repetition"
+        simulation_duration_label="Durée de simulation d'une valeur (s)"
+        v-model:simulation_duration="simulation_duration"
+        time_step_label="Durée du pas pour la simulation d'une valeur (s)"
+        v-model:time_step="time_step"
         buttonLabel="Lancer la simulation"
         :loading="loading"
         @submit="envoyerSimulation"
     />
 
+    <Empty v-if="!loading && !result && !error"
+           message="Aucune simulation effectuée. Veuillez remplir le formulaire et lancer une simulation."
+    />
     <Loader v-if="loading"/>
     <Error v-if="error" :error="error"/>
     <Result
         v-if="result"
         title="Résultats"
         paramsTitle="📝 Paramètres de la simulation"
+        :paramsLabels="{
+          temperatureAmbiante:{
+            label: 'Température ambiante',
+            unit: '°C'
+          },
+          vitesseVent: {
+            label: 'Vitesse du vent',
+            unit: 'm/s'
+          },
+          intensiteCourant: {
+            label: 'Intensité du courant',
+            unit: 'A'
+          },
+          temperatureCableInitiale: {
+            label: 'Température initiale du câble',
+            unit: '°C'
+          },
+          numberOfRepetition: {
+            label: 'Nombre de répétitions',
+            unit: ''
+          },
+          simulationDuration: {
+            label: 'Durée de simulation pour une valeur',
+            unit: 's'
+          },
+          timeStep: {
+            label: 'Durée du pas pour la simulation d\'une valeur',
+            unit: 's'
+          }
+        }"
         :params="{
           temperatureAmbiante: temperature_ambiante,
           vitesseVent: vitesse_vent,
           intensiteCourant: intensite_courant,
           temperatureCableInitiale: temperature_cable_initiale,
-          dureeMinutes: duree_minutes,
-          simulationDurationMinutes: simulation_duration_minutes,
-          timeStep: time_step_microsecond
+          numberOfRepetition: number_of_repetition,
+          simulationDuration: simulation_duration,
+          timeStep: time_step
         }"
         temperatureTitle="🌡️ Températures"
         :temperature="{
@@ -298,6 +332,7 @@ getGlobalConsumption();
   margin: 2rem auto;
   padding: 2rem;
   background: #f9fafb;
+  border: 1px solid #ccc;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

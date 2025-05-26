@@ -30,8 +30,9 @@ defineProps<{
   margin: 2rem 0;
   padding: 1.5rem;
   background-color: #f9fafb;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .project-title {
