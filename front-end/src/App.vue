@@ -10,6 +10,7 @@ import ProjectInfo from './components/ProjectInfo.vue';
 import Formulaire from "./components/form/Formulaire.vue";
 import Result from "./components/Result.vue";
 import Loader from './components/Loader.vue';
+import Empty from './components/Empty.vue';
 import Error from './components/Error.vue';
 
 // Importation des Fonctions
@@ -242,6 +243,9 @@ getGlobalConsumption();
         @submit="envoyerSimulation"
     />
 
+    <Empty v-if="!loading && !result && !error"
+           message="Aucune simulation effectuée. Veuillez remplir le formulaire et lancer une simulation."
+    />
     <Loader v-if="loading"/>
     <Error v-if="error" :error="error"/>
     <Result
