@@ -1,5 +1,35 @@
 # Eco-Num-ESIEE
 
+---
+
+![License](https://img.shields.io/github/license/Redstoneur/Eco-Num-ESIEE)
+![Top Language](https://img.shields.io/github/languages/top/Redstoneur/Eco-Num-ESIEE)
+![Python Version](https://img.shields.io/badge/python-3.10+-blue)
+![Node Version](https://img.shields.io/badge/Node-22+-green)
+![Size](https://img.shields.io/github/repo-size/Redstoneur/Eco-Num-ESIEE)
+![Contributors](https://img.shields.io/github/contributors/Redstoneur/Eco-Num-ESIEE)
+![Last Commit](https://img.shields.io/github/last-commit/Redstoneur/Eco-Num-ESIEE)
+![Issues](https://img.shields.io/github/issues/Redstoneur/Eco-Num-ESIEE)
+![Pull Requests](https://img.shields.io/github/issues-pr/Redstoneur/Eco-Num-ESIEE)
+
+---
+
+![Forks](https://img.shields.io/github/forks/Redstoneur/Eco-Num-ESIEE)
+![Stars](https://img.shields.io/github/stars/Redstoneur/Eco-Num-ESIEE)
+![Watchers](https://img.shields.io/github/watchers/Redstoneur/Eco-Num-ESIEE)
+
+[//]: # (---)
+
+[//]: # ()
+
+[//]: # (![Latest Release]&#40;https://img.shields.io/github/v/release/Redstoneur/Eco-Num-ESIEE&#41;)
+
+[//]: # (![Release Date]&#40;https://img.shields.io/github/release-date/Redstoneur/Eco-Num-ESIEE&#41;)
+
+[//]: # (![Build Status]&#40;https://img.shields.io/github/actions/workflow/status/Redstoneur/Eco-Num-ESIEE/pylint.yml&#41;)
+
+---
+
 Projet pédagogique ESIEE Paris : Plateforme de simulation de température de câble électrique, consommation énergétique et émissions de CO₂.
 
 ## Objectif
