@@ -47,8 +47,8 @@ const temperature_ambiante = ref<number>(25);
 const vitesse_vent = ref<number>(1);
 const intensite_courant = ref<number>(300);
 const temperature_cable_initiale = ref<number>(25);
-const duree_minutes = ref<number>(30);
-const simulation_duration_minutes = ref<number>(60);
+const simulation_duration_minutes = ref<number>(30);
+const simulation_duration = ref<number>(60);
 const time_step = ref<number>(0.1);
 
 // Paramètres de simulation
@@ -57,8 +57,8 @@ const parametres = ref<{
   vitesse_vent: number;
   intensite_courant: number;
   temperature_cable_initiale: number;
-  duree_minutes: number;
   simulation_duration_minutes: number;
+  simulation_duration: number;
   time_step: number;
 }>();
 
@@ -122,8 +122,8 @@ const envoyerSimulation = async () => {
       vitesse_vent: vitesse_vent.value,
       intensite_courant: intensite_courant.value,
       temperature_cable_initiale: temperature_cable_initiale.value,
-      duree_minutes: duree_minutes.value,
       simulation_duration_minutes: simulation_duration_minutes.value,
+      simulation_duration: simulation_duration.value,
       time_step: time_step.value,
     };
 
@@ -133,9 +133,9 @@ const envoyerSimulation = async () => {
       wind_speed: vitesse_vent.value,
       current_intensity: intensite_courant.value,
       initial_cable_temperature: temperature_cable_initiale.value,
-      simulation_duration_minutes: simulation_duration_minutes.value,
+      simulation_duration_minutes: simulation_duration.value,
       time_step: time_step.value,
-      duration_minutes: duree_minutes.value,
+      duration_minutes: simulation_duration_minutes.value,
     });
 
     // Création des tableaux x et y pour le graphique
@@ -231,11 +231,11 @@ getGlobalConsumption();
         v-model:intensite_courant="intensite_courant"
         temperature_cable_initiale_label="Température initiale du câble (°C)"
         v-model:temperature_cable_initiale="temperature_cable_initiale"
-        duree_minutes_label="Nombre de minutes à simuler (min)"
-        v-model:duree_minutes="duree_minutes"
-        simulation_duration_minutes_label="Durée d'une simulation (s)"
+        simulation_duration_minutes_label="Nombre de minutes à simuler (min)"
         v-model:simulation_duration_minutes="simulation_duration_minutes"
-        time_step_label="Durée de la simulation pour une valeur suivante (s)"
+        simulation_duration_label="Durée de simulation d'une valeur (s)"
+        v-model:simulation_duration="simulation_duration"
+        time_step_label="Durée du pas pour la simulation d'une valeur (s)"
         v-model:time_step="time_step"
         buttonLabel="Lancer la simulation"
         :loading="loading"
@@ -248,13 +248,43 @@ getGlobalConsumption();
         v-if="result"
         title="Résultats"
         paramsTitle="📝 Paramètres de la simulation"
+        :paramsLabels="{
+          temperatureAmbiante:{
+            label: 'Température ambiante',
+            unit: '°C'
+          },
+          vitesseVent: {
+            label: 'Vitesse du vent',
+            unit: 'm/s'
+          },
+          intensiteCourant: {
+            label: 'Intensité du courant',
+            unit: 'A'
+          },
+          temperatureCableInitiale: {
+            label: 'Température initiale du câble',
+            unit: '°C'
+          },
+          simulationDurationMinutes: {
+            label: 'Nombre de minutes à simuler',
+            unit: 'min'
+          },
+          simulationDuration: {
+            label: 'Durée de simulation pour une valeur',
+            unit: 's'
+          },
+          timeStep: {
+            label: 'Durée du pas pour la simulation d\'une valeur',
+            unit: 's'
+          }
+        }"
         :params="{
           temperatureAmbiante: temperature_ambiante,
           vitesseVent: vitesse_vent,
           intensiteCourant: intensite_courant,
           temperatureCableInitiale: temperature_cable_initiale,
-          dureeMinutes: duree_minutes,
           simulationDurationMinutes: simulation_duration_minutes,
+          simulationDuration: simulation_duration,
           timeStep: time_step
         }"
         temperatureTitle="🌡️ Températures"

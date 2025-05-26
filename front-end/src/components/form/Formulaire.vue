@@ -14,10 +14,10 @@ defineProps<{
   intensite_courant: number;
   temperature_cable_initiale_label: string;
   temperature_cable_initiale: number;
-  duree_minutes_label: string;
-  duree_minutes: number;
   simulation_duration_minutes_label: string;
   simulation_duration_minutes: number;
+  simulation_duration_label: string;
+  simulation_duration: number;
   time_step_label: string;
   time_step: number;
   buttonLabel: string;
@@ -30,8 +30,8 @@ defineEmits([
   "update:vitesse_vent",
   "update:intensite_courant",
   "update:temperature_cable_initiale",
-  "update:duree_minutes",
   "update:simulation_duration_minutes",
+  "update:simulation_duration",
   "update:time_step",
 ]);
 </script>
@@ -64,15 +64,15 @@ defineEmits([
         type="number"
     />
     <FormGroup
-        :label="duree_minutes_label"
-        :modelValue="duree_minutes"
-        @update:modelValue="(value) => $emit('update:duree_minutes', value)"
-        type="number"
-    />
-    <FormGroup
         :label="simulation_duration_minutes_label"
         :modelValue="simulation_duration_minutes"
         @update:modelValue="(value) => $emit('update:simulation_duration_minutes', value)"
+        type="number"
+    />
+    <FormGroup
+        :label="simulation_duration_label"
+        :modelValue="simulation_duration"
+        @update:modelValue="(value) => $emit('update:simulation_duration', value)"
         type="number"
     />
     <FormGroup
