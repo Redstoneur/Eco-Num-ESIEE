@@ -175,7 +175,7 @@ export default {
         current_intensity?: number;
         initial_cable_temperature?: number;
         simulation_duration_minutes?: number;
-        time_step_microsecond?: number;
+        time_step?: number;
         duration_minutes?: number;
     }): Promise<MultipleCableTemperatureConsumptionSimulationResponse> {
         let url = '/cable_temperature_consumption_simulation_list';
@@ -185,7 +185,7 @@ export default {
         if (params.current_intensity !== undefined) url += 'current_intensity=' + params.current_intensity + '&';
         if (params.initial_cable_temperature !== undefined) url += 'initial_cable_temperature=' + params.initial_cable_temperature + '&';
         if (params.simulation_duration_minutes !== undefined) url += 'simulation_duration_minutes=' + params.simulation_duration_minutes + '&';
-        if (params.time_step_microsecond !== undefined) url += 'time_step_microsecond=' + params.time_step_microsecond + '&';
+        if (params.time_step !== undefined) url += 'time_step_microsecond=' + params.time_step + '&';
         if (params.duration_minutes !== undefined) url += 'duration_minutes=' + params.duration_minutes + '&';
 
         if (url.endsWith('&')) {

@@ -49,7 +49,7 @@ const intensite_courant = ref<number>(300);
 const temperature_cable_initiale = ref<number>(25);
 const duree_minutes = ref<number>(30);
 const simulation_duration_minutes = ref<number>(60);
-const time_step_microsecond = ref<number>(0.1);
+const time_step = ref<number>(0.1);
 
 // Paramètres de simulation
 const parametres = ref<{
@@ -59,7 +59,7 @@ const parametres = ref<{
   temperature_cable_initiale: number;
   duree_minutes: number;
   simulation_duration_minutes: number;
-  time_step_microsecond: number;
+  time_step: number;
 }>();
 
 // consommation globale des simulations sur toute la durée de fonctionnement des API
@@ -124,7 +124,7 @@ const envoyerSimulation = async () => {
       temperature_cable_initiale: temperature_cable_initiale.value,
       duree_minutes: duree_minutes.value,
       simulation_duration_minutes: simulation_duration_minutes.value,
-      time_step_microsecond: time_step_microsecond.value,
+      time_step: time_step.value,
     };
 
     // Appel de l'API pour simuler la consommation de température du câble
@@ -134,7 +134,7 @@ const envoyerSimulation = async () => {
       current_intensity: intensite_courant.value,
       initial_cable_temperature: temperature_cable_initiale.value,
       simulation_duration_minutes: simulation_duration_minutes.value,
-      time_step_microsecond: time_step_microsecond.value,
+      time_step: time_step.value,
       duration_minutes: duree_minutes.value,
     });
 
@@ -233,10 +233,10 @@ getGlobalConsumption();
         v-model:temperature_cable_initiale="temperature_cable_initiale"
         duree_minutes_label="Nombre de minutes à simuler (min)"
         v-model:duree_minutes="duree_minutes"
-        simulation_duration_minutes_label="Durée de la simulation (s)"
+        simulation_duration_minutes_label="Durée d'une simulation (s)"
         v-model:simulation_duration_minutes="simulation_duration_minutes"
         time_step_label="Durée de la simulation pour une valeur suivante (s)"
-        v-model:time_step="time_step_microsecond"
+        v-model:time_step="time_step"
         buttonLabel="Lancer la simulation"
         :loading="loading"
         @submit="envoyerSimulation"
@@ -255,7 +255,7 @@ getGlobalConsumption();
           temperatureCableInitiale: temperature_cable_initiale,
           dureeMinutes: duree_minutes,
           simulationDurationMinutes: simulation_duration_minutes,
-          timeStep: time_step_microsecond
+          timeStep: time_step
         }"
         temperatureTitle="🌡️ Températures"
         :temperature="{
