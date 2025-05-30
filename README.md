@@ -18,15 +18,11 @@
 ![Stars](https://img.shields.io/github/stars/Redstoneur/Eco-Num-ESIEE)
 ![Watchers](https://img.shields.io/github/watchers/Redstoneur/Eco-Num-ESIEE)
 
-[//]: # (---)
+---
 
-[//]: # ()
+![Latest Release](https://img.shields.io/github/v/release/Redstoneur/Eco-Num-ESIEE)
 
-[//]: # (![Latest Release]&#40;https://img.shields.io/github/v/release/Redstoneur/Eco-Num-ESIEE&#41;)
-
-[//]: # (![Release Date]&#40;https://img.shields.io/github/release-date/Redstoneur/Eco-Num-ESIEE&#41;)
-
-[//]: # (![Build Status]&#40;https://img.shields.io/github/actions/workflow/status/Redstoneur/Eco-Num-ESIEE/pylint.yml&#41;)
+![Release Date](https://img.shields.io/github/release-date/Redstoneur/Eco-Num-ESIEE)
 
 ---
 
