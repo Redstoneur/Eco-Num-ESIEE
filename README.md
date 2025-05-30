@@ -1,10 +1,38 @@
 # Eco-Num-ESIEE
 
-Projet pédagogique ESIEE Paris : Plateforme de simulation de température de câble électrique, consommation énergétique et émissions de CO₂.
+---
+
+![License](https://img.shields.io/github/license/Redstoneur/Eco-Num-ESIEE)
+![Top Language](https://img.shields.io/github/languages/top/Redstoneur/Eco-Num-ESIEE)
+![Python Version](https://img.shields.io/badge/python-3.10+-blue)
+![Node Version](https://img.shields.io/badge/Node-22+-green)
+![Size](https://img.shields.io/github/repo-size/Redstoneur/Eco-Num-ESIEE)
+![Contributors](https://img.shields.io/github/contributors/Redstoneur/Eco-Num-ESIEE)
+![Last Commit](https://img.shields.io/github/last-commit/Redstoneur/Eco-Num-ESIEE)
+![Issues](https://img.shields.io/github/issues/Redstoneur/Eco-Num-ESIEE)
+![Pull Requests](https://img.shields.io/github/issues-pr/Redstoneur/Eco-Num-ESIEE)
+
+---
+
+![Forks](https://img.shields.io/github/forks/Redstoneur/Eco-Num-ESIEE)
+![Stars](https://img.shields.io/github/stars/Redstoneur/Eco-Num-ESIEE)
+![Watchers](https://img.shields.io/github/watchers/Redstoneur/Eco-Num-ESIEE)
+
+---
+
+![Latest Release](https://img.shields.io/github/v/release/Redstoneur/Eco-Num-ESIEE)
+
+![Release Date](https://img.shields.io/github/release-date/Redstoneur/Eco-Num-ESIEE)
+
+---
+
+Projet pédagogique ESIEE Paris : Plateforme de simulation de température de câble électrique, consommation énergétique
+et émissions de CO₂.
 
 ## Objectif
 
 Ce projet propose une application web complète permettant de :
+
 - Simuler la température d'un câble électrique selon différents paramètres physiques.
 - Estimer la consommation énergétique et les émissions de CO₂ associées à chaque simulation.
 - Visualiser les résultats et suivre la consommation globale.
@@ -54,10 +82,16 @@ docker compose down
 - **Frontend** : Vue 3, TypeScript, Plotly.js, Axios, Vite
 - **Conteneurisation** : Docker, Docker Compose
 
-## Documentation détaillée
+## Documentation
 
 - [Documentation Backend](./back-end/README.md)
 - [Documentation Frontend](./front-end/README.md)
+- [Rapport technique](docs/Rapport.md)
+- [Documentation pour les Notebooks version script](./back-end/scripts/README.md)
+- [Documentation Notebooks](notebooks/README.md)
+- [Notebook de tests](notebooks/tests_simulation.ipynb)
+- [Notebook de test des API](notebooks/api_tests.ipynb)
+- [Notebook de preview de fonctionnement pour les API](notebooks/simulation_preview.ipynb)
 
 ## Licence
 

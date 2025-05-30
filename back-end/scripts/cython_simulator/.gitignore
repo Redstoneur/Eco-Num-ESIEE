@@ -1,0 +1,11 @@
+# .gitignore for Cython simulator directory
+# Ignore compiled Cython files
+*.so
+# Ignore Cython build directories
+build/
+# Ignore Cython cache directories
+__pycache__/
+# Ignore Cython generated files
+*.c
+# Ignore Cython configuration files
+*.pyd

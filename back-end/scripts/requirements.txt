@@ -1,0 +1,11 @@
+numpy
+matplotlib
+scipy
+numba
+cython
+setuptools
+psutil
+codecarbon
+tabulate
+requests
+plotly
