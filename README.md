@@ -30,11 +30,13 @@
 
 ---
 
-Projet pédagogique ESIEE Paris : Plateforme de simulation de température de câble électrique, consommation énergétique et émissions de CO₂.
+Projet pédagogique ESIEE Paris : Plateforme de simulation de température de câble électrique, consommation énergétique
+et émissions de CO₂.
 
 ## Objectif
 
 Ce projet propose une application web complète permettant de :
+
 - Simuler la température d'un câble électrique selon différents paramètres physiques.
 - Estimer la consommation énergétique et les émissions de CO₂ associées à chaque simulation.
 - Visualiser les résultats et suivre la consommation globale.
@@ -89,6 +91,7 @@ docker compose down
 - [Documentation Backend](./back-end/README.md)
 - [Documentation Frontend](./front-end/README.md)
 - [Rapport technique](docs/Rapport.md)
+- [Documentation pour les Notebooks version script](./back-end/scripts/README.md)
 - [Notebook de tests](notebooks/tests_simulation.ipynb)
 - [Notebook de test des API](notebooks/api_tests.ipynb)
 - [Notebook de preview de fonctionnement pour les API](notebooks/simulation_preview.ipynb)
