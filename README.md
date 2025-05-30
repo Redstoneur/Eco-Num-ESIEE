@@ -84,10 +84,14 @@ docker compose down
 - **Frontend** : Vue 3, TypeScript, Plotly.js, Axios, Vite
 - **Conteneurisation** : Docker, Docker Compose
 
-## Documentation détaillée
+## Documentation
 
 - [Documentation Backend](./back-end/README.md)
 - [Documentation Frontend](./front-end/README.md)
+- [Rapport technique](docs/Rapport.md)
+- [Notebook de tests](notebooks/tests_simulation.ipynb)
+- [Notebook de test des API](notebooks/api_tests.ipynb)
+- [Notebook de preview de fonctionnement pour les API](notebooks/simulation_preview.ipynb)
 
 ## Licence
 
