@@ -88,6 +88,7 @@ docker compose down
 - [Documentation Frontend](./front-end/README.md)
 - [Rapport technique](docs/Rapport.md)
 - [Documentation pour les Notebooks version script](./back-end/scripts/README.md)
+- [Documentation Notebooks](notebooks/README.md)
 - [Notebook de tests](notebooks/tests_simulation.ipynb)
 - [Notebook de test des API](notebooks/api_tests.ipynb)
 - [Notebook de preview de fonctionnement pour les API](notebooks/simulation_preview.ipynb)
